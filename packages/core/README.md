@@ -129,7 +129,7 @@ This package includes a Dockerfile for deployment on Railway.
 
 2. **Configure build settings:**
    - Root Directory: `/` (repository root) - this is Railway's default
-   - Dockerfile Path: `Dockerfile` (uses the root Dockerfile)
+   - Dockerfile Path: `packages/core/Dockerfile`
 
 3. **Set environment variables:**
    - `PORT`: Railway will set this automatically
