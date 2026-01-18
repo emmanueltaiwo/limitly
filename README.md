@@ -1,135 +1,198 @@
-# Turborepo starter
+# Limitly
 
-This Turborepo starter is maintained by the Turborepo core team.
+**Free, fast, and feature-rich rate limiting for Node.js and browsers.**
 
-## Using this example
+Limitly is a centralized rate-limiting service using Redis and token bucket algorithm, designed to operate across distributed services with graceful degradation and real-time metrics.
 
-Run the following command:
+## Features
 
-```sh
-npx create-turbo@latest
+- ⚡ **TypeScript-First** - Fully typed with excellent IDE support
+- 🆓 **Free Forever** - No API keys, no payments, no limits
+- 🚀 **Distributed** - Redis-backed for multi-server deployments
+- ⚙️ **Token Bucket** - More accurate than fixed window limits
+- 🔒 **Service Isolation** - Same IP across sites? No problem
+- 🎯 **Dynamic Config** - Per-request limits without redeployment
+- 📊 **Rate Limit Headers** - Standard `X-RateLimit-*` headers
+- 🛡️ **Graceful Degradation** - Works even if Redis is down
+- ⚡ **Zero Config** - Works out of the box
+
+## Quick Start
+
+```bash
+npm install @limitly/sdk
 ```
 
-## What's inside?
+```typescript
+import { rateLimit } from '@limitly/sdk';
 
-This Turborepo includes the following packages/apps:
+const checkLimit = rateLimit();
 
-### Apps and Packages
+async function handler(req, res) {
+  const result = await checkLimit(req.userId || req.ip);
+  
+  if (!result.allowed) {
+    return res.status(429).json({ error: 'Too many requests' });
+  }
+  
+  // Process request...
+}
+```
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Project Structure
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+This is a [Turborepo](https://turborepo.org) monorepo containing:
 
-### Utilities
+### Packages
 
-This Turborepo has some additional tools already setup for you:
+- **`@limitly/sdk`** - TypeScript-first SDK for rate limiting
+  - Client library for Node.js and browsers
+  - Full type safety and IntelliSense support
+  - See [packages/sdk/README.md](./packages/sdk/README.md)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+- **`@limitly/core`** - Core rate limiting service
+  - Redis-backed token bucket algorithm
+  - HTTP API for rate limit checks
+  - Graceful degradation and error handling
+  - See [packages/core/README.md](./packages/core/README.md)
+
+- **`@repo/ui`** - Shared UI components
+  - React components for web app
+  - Code blocks, buttons, cards, etc.
+
+- **`@repo/eslint-config`** - Shared ESLint configurations
+- **`@repo/typescript-config`** - Shared TypeScript configurations
+
+### Apps
+
+- **`apps/web`** - Marketing website and documentation
+  - Landing page at `/`
+  - Documentation at `/docs`
+  - Built with Next.js 16
+  - See [apps/web/README.md](./apps/web/README.md)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm, yarn, or pnpm
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+```
+
+### Development
+
+```bash
+# Start all apps and packages in development mode
+npm run dev
+
+# Or use turbo directly
+turbo dev
+```
 
 ### Build
 
-To build all apps and packages, run the following command:
+```bash
+# Build all packages and apps
+npm run build
 
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+# Or use turbo directly
 turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### Run Specific Packages
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
+```bash
+# Run only the web app
 turbo dev --filter=web
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+# Build only the SDK
+turbo build --filter=@limitly/sdk
+
+# Build only the core service
+turbo build --filter=@limitly/core
 ```
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+## Architecture
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+User Application
+    ↓
+@limitly/sdk (installed via npm)
+    ↓ HTTP requests
+@limitly/core (hosted service)
+    ↓
+Redis (rate limit storage)
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+1. Users install `@limitly/sdk` in their applications
+2. SDK makes HTTP requests to the hosted `@limitly/core` service
+3. Core service uses Redis with token bucket algorithm for rate limiting
+4. Results returned with rate limit headers and metadata
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## Packages
 
+### @limitly/sdk
+
+The client SDK that users install in their applications.
+
+```bash
+cd packages/sdk
+npm install
+npm run build
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### @limitly/core
+
+The core rate limiting service (hosted by Limitly).
+
+```bash
+cd packages/core
+npm install
+npm run dev  # Development
+npm run build && npm start  # Production
 ```
 
-## Useful Links
+### apps/web
 
-Learn more about the power of Turborepo:
+The marketing website and documentation.
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+```bash
+cd apps/web
+npm install
+npm run dev  # Development server on http://localhost:3000
+npm run build && npm start  # Production
+```
+
+## Tech Stack
+
+- **TypeScript** - Full type safety across all packages
+- **Turborepo** - Monorepo build system
+- **Next.js 16** - Web app framework
+- **Express** - Core service framework
+- **Redis** - Rate limit storage
+- **Tailwind CSS** - Styling
+
+## Contributing
+
+This is a monorepo managed by Turborepo. When making changes:
+
+1. Make your changes in the relevant package/app
+2. Run `npm run build` to verify everything compiles
+3. Test your changes locally
+4. Submit a pull request
+
+## License
+
+ISC
+
+## Links
+
+- [Documentation](https://limitly.emmanueltaiwo.dev/docs)
+- [SDK Package](./packages/sdk/README.md)
+- [Core Service](./packages/core/README.md)
+- [Web App](./apps/web/README.md)

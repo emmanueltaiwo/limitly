@@ -1,0 +1,118 @@
+# @limitly/core
+
+Centralized rate-limiting service using Redis and token bucket algorithm. Built with TypeScript for maximum type safety. This is the core service that powers `@limitly/sdk`.
+
+## Features
+
+- **TypeScript-First** - Fully typed with strict type checking
+- **Token Bucket Algorithm** - More accurate than fixed window limits
+- **Redis-Backed** - Distributed across multiple servers
+- **Service Isolation** - Same IP across sites? No collision
+- **Dynamic Configuration** - Per-request limits via headers
+- **Rate Limit Headers** - Standard `X-RateLimit-*` headers
+- **Graceful Degradation** - Works even if Redis is unavailable
+- **Atomic Operations** - Lua scripts ensure consistency
+
+## Architecture
+
+Limitly uses a centralized service architecture:
+
+```
+User Application → @limitly/sdk → HTTP → @limitly/core → Redis
+```
+
+- **SDK** - Client library users install
+- **Core** - This service (hosted by Limitly)
+- **Redis** - Stores rate limit state
+
+## API Endpoints
+
+### Health Check
+
+```bash
+GET /api/health
+```
+
+Returns service health status and Redis connection state.
+
+### Rate Limit Check
+
+```bash
+GET /api/rate-limit
+Headers:
+  X-Service-Id: service-identifier (optional, prevents cross-site collisions)
+  X-Client-Id: user-identifier (optional, falls back to IP)
+  X-Rate-Limit-Capacity: number (optional, dynamic capacity)
+  X-Rate-Limit-Refill: number (optional, dynamic refill rate)
+```
+
+**Response (200):**
+```json
+{
+  "message": "Allowed",
+  "limit": 100,
+  "remaining": 95,
+  "reset": 1234567890000
+}
+```
+
+**Response (429):**
+```json
+{
+  "message": "Too many requests",
+  "limit": 100,
+  "remaining": 0,
+  "reset": 1234567890000
+}
+```
+
+**Headers:**
+- `X-RateLimit-Limit`: Total limit
+- `X-RateLimit-Remaining`: Requests remaining
+- `X-RateLimit-Reset`: Unix timestamp in seconds when limit resets
+- `Retry-After`: Seconds until retry (on 429)
+
+## Rate Limiting Algorithm
+
+Limitly uses the **Token Bucket** algorithm:
+
+- Each user has a "bucket" of tokens
+- Each request consumes 1 token
+- Tokens refill at a configurable rate (tokens/second)
+- More accurate than fixed windows
+
+**Example:** `capacity=100, refillRate=10`
+- Initially: 100 requests allowed
+- After 1 second: +10 tokens (110 available)
+- Smooth, continuous refill
+
+## Default Configuration
+
+- **Capacity**: 100 tokens
+- **Refill Rate**: 10 tokens/second
+- **TTL**: 1 hour (keys expire after inactivity)
+
+## Service Isolation
+
+Same IP across multiple sites? No problem!
+
+Each service gets isolated rate limits using `X-Service-Id`:
+
+```
+Service A: rate_limit:service-a:192.168.1.1
+Service B: rate_limit:service-b:192.168.1.1
+```
+
+Same IP, different limits per service.
+
+## Edge Cases Handled
+
+1. **Same IP across sites** - Service ID isolation
+2. **Redis unavailable** - Graceful degradation (allows requests)
+3. **Concurrent requests** - Atomic Lua scripts
+4. **Config changes** - Dynamic per-request configuration
+5. **Missing identifiers** - Falls back to IP address
+
+## License
+
+ISC

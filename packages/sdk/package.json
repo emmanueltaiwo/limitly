@@ -1,0 +1,37 @@
+{
+  "name": "@limitly/sdk",
+  "version": "1.0.0",
+  "description": "Official SDK for Limitly rate limiting service",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "rate-limit",
+    "rate-limiting",
+    "token-bucket",
+    "redis",
+    "sdk"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {},
+  "peerDependenciesMeta": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/limitly.git"
+  },
+  "author": "Your Name",
+  "license": "ISC"
+}

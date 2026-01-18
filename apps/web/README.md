@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# Limitly Web
+
+Marketing website and documentation for Limitly - the best TypeScript-first rate limiting SDK.
+
+## Features
+
+- **Landing Page** (`/`) - Beautiful hero, features, and getting started section
+- **Documentation** (`/docs`) - Complete TypeScript-first documentation with code examples
+- **Dark Theme** - Modern dark theme with smooth transitions
+- **Responsive** - Fully responsive design for all devices
+- **Type-Safe** - Built with TypeScript and Next.js 16
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The site will be available at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+- **Next.js 16** - React framework with App Router
+- **TypeScript** - Full type safety
+- **Tailwind CSS** - Utility-first styling
+- **Geist Font** - Beautiful typography
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+apps/web/
+├── app/
+│   ├── page.tsx          # Landing page
+│   ├── docs/
+│   │   └── page.tsx      # Documentation page
+│   ├── layout.tsx        # Root layout with metadata
+│   └── globals.css       # Global styles
+└── public/               # Static assets
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Landing Page (`/`)
 
-## Deploy on Vercel
+Features:
+- Hero section with gradient text
+- Feature grid highlighting benefits
+- Code examples with installation
+- Call-to-action sections
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Documentation (`/docs`)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Sections:
+- Getting Started
+- Installation
+- Basic Usage
+- TypeScript Support
+- Features
+- API Reference
+- Examples
+
+## Development
+
+The site uses Next.js App Router with:
+- Server and Client Components
+- TypeScript strict mode
+- Tailwind CSS for styling
+- Custom UI components from `@repo/ui`
+
+## Deployment
+
+The site can be deployed to:
+- Vercel (recommended)
+- Netlify
+- Any Node.js hosting platform
+
+## License
+
+ISC
