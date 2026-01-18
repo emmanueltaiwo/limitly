@@ -127,9 +127,12 @@ This package includes a Dockerfile for deployment on Railway.
 
 1. **Create a new Railway project** and connect your repository
 
-2. **Configure build settings:**
-   - Root Directory: `/` (repository root) - this is Railway's default
-   - Dockerfile Path: `packages/core/Dockerfile`
+2. **Configure build settings (IMPORTANT):**
+   - **Root Directory:** Must be set to `/` (repository root)
+     - Go to your service → Settings → Build
+     - Set "Root Directory" to `/` (the root of your repository)
+   - **Dockerfile Path:** `packages/core/Dockerfile`
+   - **Note:** The build context MUST be the repository root, not `packages/core/`, because the Dockerfile needs access to the root `package.json` and workspace structure.
 
 3. **Set environment variables:**
    - `PORT`: Railway will set this automatically
@@ -137,8 +140,6 @@ This package includes a Dockerfile for deployment on Railway.
    - `NODE_ENV`: `production`
 
 4. **Deploy:** Railway will automatically build and deploy
-
-**Note:** A Dockerfile is provided at the repository root (`/Dockerfile`) which is configured to build this package. This ensures the build context includes all necessary workspace dependencies.
 
 ## License
 
