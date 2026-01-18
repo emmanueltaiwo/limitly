@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://limitly.com",
+    url: "https://limitly.emmanueltaiwo.dev",
     title: "Limitly - Free Rate Limiting SDK",
     description: "The best TypeScript-first rate limiting SDK. Free, fast, and fully type-safe.",
     siteName: "Limitly",
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  metadataBase: new URL("https://limitly.com"),
+  metadataBase: new URL("https://limitly.emmanueltaiwo.dev"),
 };
 
 export default function RootLayout({
@@ -73,6 +74,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
