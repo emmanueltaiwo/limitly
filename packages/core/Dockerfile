@@ -8,11 +8,13 @@ WORKDIR /app
 # Copy root package files for workspace support
 COPY package.json package-lock.json ./
 
-# Copy core package files
+# Copy all workspace package.json files so npm can properly resolve workspaces
+# This ensures npm installs dependencies correctly for the workspace
 COPY packages/core/package.json ./packages/core/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
 
 # Install dependencies (using npm ci for reproducible builds)
-# Install all workspace dependencies
+# Install all workspace dependencies - this hoists them to root node_modules
 RUN npm ci
 
 # Build the application
@@ -22,13 +24,19 @@ WORKDIR /app
 # Copy root package files
 COPY package.json package-lock.json ./
 
-# Copy dependencies from deps stage
+# Copy dependencies from deps stage (includes workspace node_modules)
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy workspace package.json files to maintain workspace structure
+COPY packages/core/package.json ./packages/core/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
 
 # Copy core package source files and config
 COPY packages/core ./packages/core
 
 # Build the TypeScript code
+# TypeScript with moduleResolution: "Node" will look up the directory tree for node_modules
+# Since dependencies are hoisted to /app/node_modules, it should find them
 WORKDIR /app/packages/core
 RUN npm run build
 
