@@ -40,6 +40,9 @@ export default function Home() {
               <Link href="#install" className="text-sm text-white/70 hover:text-white transition-colors duration-200">
                 Installation
               </Link>
+              <Link href="#comparison" className="text-sm text-white/70 hover:text-white transition-colors duration-200">
+                Comparison
+              </Link>
               <Link href="#faq" className="text-sm text-white/70 hover:text-white transition-colors duration-200">
                 FAQ
               </Link>
@@ -285,6 +288,75 @@ export async function GET(request: Request) {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Comparison Section */}
+        <section id="comparison" className="py-24 px-4 sm:px-6 lg:px-8 relative">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl sm:text-5xl font-black mb-6 tracking-tight">
+                Why choose <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Limitly?</span>
+              </h2>
+              <p className="text-xl text-white/60 max-w-2xl mx-auto">
+                See how Limitly compares to other rate limiting solutions
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <div className="inline-block min-w-full">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-white/80">Feature</th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-white/80">express-rate-limit</th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-white/80">Upstash</th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-white/80">Arcjet</th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-white/80">Unkey</th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-white bg-white/10 rounded-t-lg">Limitly</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { feature: "TypeScript Support", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (TypeScript-first)" },
+                      { feature: "Type Safety", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (Full type exports)" },
+                      { feature: "IntelliSense", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (JSDoc + types)" },
+                      { feature: "Free", express: "✅", upstash: "⚠️ (Limited)", arcjet: "⚠️ (Limited)", unkey: "⚠️ (Limited)", limitly: "✅ (No limits)" },
+                      { feature: "Distributed", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (Redis)" },
+                      { feature: "Token Bucket", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
+                      { feature: "Dynamic Limits", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
+                      { feature: "Service Isolation", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
+                      { feature: "Rate Limit Headers", express: "❌ (manual)", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (automatic)" },
+                      { feature: "Graceful Degradation", express: "❌", upstash: "❌", arcjet: "❌", unkey: "❌", limitly: "✅" },
+                      { feature: "Zero Config", express: "✅", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
+                      { feature: "Self-Hosted Option", express: "✅", upstash: "❌", arcjet: "❌", unkey: "❌", limitly: "✅" },
+                    ].map((row, i) => (
+                      <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="py-4 px-6 text-sm text-white/90 font-medium">{row.feature}</td>
+                        <td className="py-4 px-6 text-sm text-center text-white/60">{row.express}</td>
+                        <td className="py-4 px-6 text-sm text-center text-white/60">{row.upstash}</td>
+                        <td className="py-4 px-6 text-sm text-center text-white/60">{row.arcjet}</td>
+                        <td className="py-4 px-6 text-sm text-center text-white/60">{row.unkey}</td>
+                        <td className="py-4 px-6 text-sm text-center text-white font-medium bg-white/5">{row.limitly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mt-12 text-center">
+              <p className="text-white/60 text-sm mb-6">
+                ⚠️ Limited free tiers may have usage restrictions or require credit cards
+              </p>
+              <Button
+                href="/docs"
+                className="px-8 py-4 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-200 text-lg group inline-flex items-center gap-2"
+              >
+                Get Started Free
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
             </div>
           </div>
         </section>
