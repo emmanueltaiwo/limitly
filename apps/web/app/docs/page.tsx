@@ -36,7 +36,7 @@ const sections = [
 
 const Loading = () => null;
 
-export default function DocsPage() {
+function DocsContent() {
   const searchParams = useSearchParams();
   const [copied, setCopied] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,7 +83,6 @@ export default function DocsPage() {
   );
 
   return (
-    <Suspense fallback={<Loading />}>
       <div className="min-h-screen bg-black text-white overflow-hidden dark">
         {/* Scroll progress bar */}
         <div
@@ -105,7 +104,7 @@ export default function DocsPage() {
                 <Link href="/docs" className="text-sm text-white font-medium">
                   Documentation
                 </Link>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-white/70 hover:text-white transition-colors">
+                <a href="https://github.com/emmanueltaiwo/limitly" target="_blank" rel="noopener noreferrer" className="text-sm text-white/70 hover:text-white transition-colors">
                   GitHub
                 </a>
               </div>
@@ -184,7 +183,7 @@ export default function DocsPage() {
                   {[
                     { label: "API Reference", href: "#api-reference" },
                     { label: "Examples", href: "#examples" },
-                    { label: "Support", href: "https://github.com/issues" },
+                    { label: "Support", href: "https://github.com/emmanueltaiwo/limitly/issues" },
                   ].map((item) => (
                     <li key={item.label}>
                       <a
@@ -923,6 +922,13 @@ async function protectEndpoint(endpoint, req) {
           </aside>
         </main>
       </div>
+  );
+}
+
+export default function DocsPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <DocsContent />
     </Suspense>
   );
 }

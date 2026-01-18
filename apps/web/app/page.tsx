@@ -49,7 +49,7 @@ export default function Home() {
                 Docs
               </Link>
               <Button
-                href="https://github.com"
+                href="https://github.com/emmanueltaiwo/limitly"
                 className="px-4 py-2 bg-white text-black hover:bg-gray-100 rounded-full text-sm font-semibold transition-all duration-200"
               >
                 GitHub
@@ -353,7 +353,7 @@ const checkLimit = rateLimit();`, "init")}
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
-                href="https://github.com"
+                href="https://github.com/emmanueltaiwo/limitly"
                 className="px-8 py-4 border border-white/30 text-white hover:border-white/60 hover:bg-white/5 font-bold rounded-full transition-all duration-200 text-lg"
               >
                 View on GitHub
@@ -376,7 +376,7 @@ const checkLimit = rateLimit();`, "init")}
                 Docs
               </Link>
               <a
-                href="https://github.com"
+                href="https://github.com/emmanueltaiwo/limitly"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/60 hover:text-white transition-colors text-sm"

@@ -1,6 +1,6 @@
 {
   "name": "@limitly/sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official SDK for Limitly rate limiting service",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     "redis",
     "sdk"
   ],
-  "author": "",
+  "author": "Emmanuel Taiwo",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
@@ -30,8 +30,6 @@
   "peerDependenciesMeta": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/limitly.git"
-  },
-  "author": "Your Name",
-  "license": "ISC"
+    "url": "https://github.com/emmanueltaiwo/limitly.git"
+  }
 }
