@@ -102,9 +102,9 @@ export default function Home() {
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
                 {[
-                  { label: "Requests/sec", value: "1M+" },
-                  { label: "Latency", value: "<1ms" },
-                  { label: "Uptime", value: "99.99%" },
+                  { label: "Open Source", value: "100%" },
+                  { label: "Free Forever", value: "No Limits" },
+                  { label: "Type Safe", value: "TypeScript" },
                 ].map((stat, i) => (
                   <div
                     key={i}
