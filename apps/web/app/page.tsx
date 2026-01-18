@@ -249,30 +249,35 @@ const checkLimit = rateLimit();`, "init")}
                 </div>
                 <div className="relative">
                   <CodeBlock language="typescript">
-{`async function handler(req, res) {
-  const result = await checkLimit(req.userId || req.ip);
+{`// Next.js App Router example
+export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'unknown';
+  const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    return res.status(429).json({ 
-      error: 'Too many requests' 
-    });
+    return Response.json(
+      { error: 'Too many requests' },
+      { status: 429 }
+    );
   }
   
   // Process your request...
-  res.status(200).json({ success: true });
+  return Response.json({ success: true });
 }`}
                   </CodeBlock>
                   <button
-                    onClick={() => copyToClipboard(`async function handler(req, res) {
-  const result = await checkLimit(req.userId || req.ip);
+                    onClick={() => copyToClipboard(`export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'unknown';
+  const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    return res.status(429).json({ 
-      error: 'Too many requests' 
-    });
+    return Response.json(
+      { error: 'Too many requests' },
+      { status: 429 }
+    );
   }
   
-  res.status(200).json({ success: true });
+  return Response.json({ success: true });
 }`, "usage")}
                     className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                   >

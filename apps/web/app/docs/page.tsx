@@ -181,19 +181,30 @@ function DocsContent() {
                 <p className="text-xs font-semibold text-white/50 uppercase mb-4">Resources</p>
                 <ul className="space-y-3">
                   {[
-                    { label: "API Reference", href: "#api-reference" },
-                    { label: "Examples", href: "#examples" },
-                    { label: "Support", href: "https://github.com/emmanueltaiwo/limitly/issues" },
+                    { label: "API Reference", href: "#api-reference", onClick: () => setActiveSection("api-reference") },
+                    { label: "Examples", href: "#examples", onClick: () => setActiveSection("examples") },
+                    { label: "Support", href: "https://github.com/emmanueltaiwo/limitly/issues", external: true },
+                    { label: "GitHub", href: "https://github.com/emmanueltaiwo/limitly", external: true },
                   ].map((item) => (
                     <li key={item.label}>
                       <a
                         href={item.href}
-                        target={item.href.startsWith("http") ? "_blank" : undefined}
-                        rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                        onClick={(e) => {
+                          if (item.onClick) {
+                            e.preventDefault();
+                            item.onClick();
+                            const element = document.querySelector(item.href);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }
+                        }}
+                        target={item.external ? "_blank" : undefined}
+                        rel={item.external ? "noopener noreferrer" : undefined}
                         className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-2 group"
                       >
                         {item.label}
-                        {item.href.startsWith("http") && <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                        {item.external && <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
                       </a>
                     </li>
                   ))}
@@ -207,7 +218,7 @@ function DocsContent() {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
               <div className="space-y-24">
                 {/* Getting Started */}
-                <section>
+                <section id="getting-started">
                   <div className="space-y-16">
                     <div id="introduction">
                       <h1 className="text-6xl font-black mb-4 tracking-tight animate-fade-in-up">
@@ -252,26 +263,31 @@ function DocsContent() {
 // Create a rate limiter function
 const checkLimit = rateLimit();
 
-// Use in your API handler
-export default async function handler(req, res) {
-  const result = await checkLimit(req.user?.id || req.ip);
+// Use in your API handler (Next.js App Router example)
+export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'unknown';
+  const result = await checkLimit(userId);
 
   if (!result.allowed) {
-    return res.status(429).json({ error: 'Too many requests' });
+    return Response.json(
+      { error: 'Too many requests' },
+      { status: 429 }
+    );
   }
 
   // Your route logic here
-  res.status(200).json({ success: true });
+  return Response.json({ success: true });
 }`}</CodeBlock>
                         <button
                           onClick={() => copyToClipboard(`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
-export default async function handler(req, res) {
-  const result = await checkLimit(req.user?.id || req.ip);
-  if (!result.allowed) return res.status(429).json({ error: 'Too many requests' });
-  res.status(200).json({ success: true });
+export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'unknown';
+  const result = await checkLimit(userId);
+  if (!result.allowed) return Response.json({ error: 'Too many requests' }, { status: 429 });
+  return Response.json({ success: true });
 }`, "quickstart")}
                           className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                         >
@@ -538,7 +554,7 @@ async function apiCall(req, res) {
                 </section>
 
                 {/* API Reference */}
-                <section className="pt-8 border-t border-white/10">
+                <section id="api-reference" className="pt-8 border-t border-white/10">
                   <h2 className="text-4xl font-bold mb-6 animate-fade-in-up">API Reference</h2>
                   <div className="space-y-16">
                     <div id="ratelimit">
@@ -874,7 +890,7 @@ async function protectEndpoint(endpoint, req) {
                       View Quick Start
                     </Link>
                     <a
-                      href="https://github.com"
+                      href="https://github.com/emmanueltaiwo/limitly"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-6 py-3 border border-white/30 text-white hover:border-white/60 hover:bg-white/5 font-semibold rounded-lg transition-all duration-200"
@@ -913,6 +929,13 @@ async function protectEndpoint(endpoint, req) {
                 <a
                   key={item.id}
                   href={`#${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const element = document.getElementById(item.id);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
                   className="block px-3 py-1.5 text-white/60 hover:text-white transition-colors rounded hover:bg-white/5"
                 >
                   {item.label}
