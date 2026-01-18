@@ -182,7 +182,6 @@ function DocsContent() {
                 <ul className="space-y-3">
                   {[
                     { label: "API Reference", href: "#api-reference", onClick: () => setActiveSection("api-reference") },
-                    { label: "Examples", href: "#examples", onClick: () => setActiveSection("examples") },
                     { label: "Support", href: "https://github.com/emmanueltaiwo/limitly/issues", external: true },
                     { label: "GitHub", href: "https://github.com/emmanueltaiwo/limitly", external: true },
                   ].map((item) => (

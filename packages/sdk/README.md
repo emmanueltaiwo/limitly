@@ -27,15 +27,20 @@ import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
-// In your API endpoint
-async function handler(req, res) {
-  const result = await checkLimit(req.userId || req.ip);
+// Next.js App Router example
+export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'unknown';
+  const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    return res.status(429).json({ error: 'Too many requests' });
+    return Response.json(
+      { error: 'Too many requests' },
+      { status: 429 }
+    );
   }
   
   // Process request...
+  return Response.json({ success: true });
 }
 ```
 
@@ -57,7 +62,7 @@ const result = await checkLimit('user-123');
 Prevent cross-site collisions with service IDs:
 
 ```typescript
-import { createClient } from '@limitly/sdk';
+import { createClient } from 'limitly-sdk';
 
 const client = createClient({
   serviceId: 'my-app-production'
@@ -138,6 +143,7 @@ const result = await checkLimit('user-123');
 Creates a new Limitly client instance.
 
 **Config options:**
+- `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev)
 - `serviceId` (string, optional): Isolate rate limits per service
 - `timeout` (number, optional): Request timeout in ms (default: 5000)
 
@@ -193,25 +199,40 @@ app.get('/api/data', async (req, res) => {
 });
 ```
 
-### Premium vs Free Users
+### Premium vs Free Users (Next.js App Router)
 
 ```typescript
-app.use(async (req, res, next) => {
-  const isPremium = req.user?.plan === 'premium';
+// middleware.ts
+import { rateLimit } from 'limitly-sdk';
+import { NextRequest, NextResponse } from 'next/server';
+
+const checkLimit = rateLimit();
+
+export async function middleware(request: NextRequest) {
+  // Get user from your auth system
+  const user = await getUser(request); // Your auth logic
+  const isPremium = user?.plan === 'premium';
   
   const result = await checkLimit({
-    identifier: req.user?.id || req.ip,
+    identifier: user?.id || request.ip || 'unknown',
     capacity: isPremium ? 1000 : 100,
     refillRate: isPremium ? 100 : 10,
-    skip: req.user?.isAdmin || false
+    skip: user?.isAdmin || false
   });
   
   if (!result.allowed) {
-    return res.status(429).json({ error: 'Rate limit exceeded' });
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    );
   }
   
-  next();
-});
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: '/api/:path*',
+};
 ```
 
 ## vs express-rate-limit
