@@ -1,6 +1,6 @@
-import app from './app';
-import { envConfig } from './config/env';
-import { redisClient } from './config/redis';
+import app from './app.js';
+import { envConfig } from './config/env.js';
+import { redisClient } from './config/redis.js';
 
 const server = app.listen(envConfig.PORT, async () => {
   try {

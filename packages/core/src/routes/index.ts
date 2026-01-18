@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { healthRoutes } from './health';
-import { rateLimitMiddleware } from '../middleware/rateLimiterMiddleware';
-import RateLimiter from '../algorithms/rateLimiter';
-import { redisClient } from '../config/redis';
-import { rateLimitRoutes } from './rateLimit';
+import { healthRoutes } from './health.js';
+import { rateLimitMiddleware } from '../middleware/rateLimiterMiddleware.js';
+import RateLimiter from '../algorithms/rateLimiter.js';
+import { redisClient } from '../config/redis.js';
+import { rateLimitRoutes } from './rateLimit.js';
 
 const router = Router();
 

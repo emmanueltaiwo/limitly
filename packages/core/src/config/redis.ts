@@ -1,5 +1,5 @@
 import redis from 'redis';
-import { envConfig } from './env';
+import { envConfig } from './env.js';
 
 class RedisClient {
   private redisClient: redis.RedisClientType;

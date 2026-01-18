@@ -1,4 +1,4 @@
-import RateLimiter from '../algorithms/rateLimiter';
+import RateLimiter from '../algorithms/rateLimiter.js';
 import type { Request, Response, NextFunction } from 'express';
 
 /**

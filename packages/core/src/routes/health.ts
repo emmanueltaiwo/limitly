@@ -1,4 +1,4 @@
-import { redisClient } from '../config/redis';
+import { redisClient } from '../config/redis.js';
 import { Request, Response } from 'express';
 
 export const healthRoutes = async (req: Request, res: Response) => {
