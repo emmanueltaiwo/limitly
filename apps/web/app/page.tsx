@@ -201,10 +201,10 @@ export default function Home() {
                 </div>
                 <div className="relative">
                   <CodeBlock language="bash">
-{`npm install @limitly/sdk`}
+{`npm install limitly-sdk`}
                   </CodeBlock>
                   <button
-                    onClick={() => copyToClipboard("npm install @limitly/sdk", "install")}
+                    onClick={() => copyToClipboard("npm install limitly-sdk", "install")}
                     className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                   >
                     {copied === "install" ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-white/60" />}
@@ -223,12 +223,12 @@ export default function Home() {
                 </div>
                 <div className="relative">
                   <CodeBlock language="typescript">
-{`import { rateLimit } from '@limitly/sdk';
+{`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();`}
                   </CodeBlock>
                   <button
-                    onClick={() => copyToClipboard(`import { rateLimit } from '@limitly/sdk';
+                    onClick={() => copyToClipboard(`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();`, "init")}
                     className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"

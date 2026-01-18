@@ -1,5 +1,5 @@
 /**
- * @limitly/sdk
+ * limitly-sdk
  * Type-safe rate limiting SDK for Node.js and browsers
  */
 
@@ -7,6 +7,8 @@
  * Configuration options for creating a Limitly client
  */
 export interface LimitlyConfig {
+  /** Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev) */
+  baseUrl?: string;
   /** Service identifier for rate limit isolation */
   serviceId?: string;
   /** Request timeout in milliseconds (default: 5000) */
@@ -78,7 +80,7 @@ export class LimitlyClient {
   private readonly timeout: number;
 
   constructor(config: LimitlyConfig = {}) {
-    this.baseUrl = 'https://api.limitly.emmanueltaiwo.dev';
+    this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
     this.timeout = config.timeout ?? 5000;
   }

@@ -224,9 +224,9 @@ function DocsContent() {
                         Get started with Limitly in seconds. Install via npm and you're ready to protect your APIs.
                       </p>
                       <div className="relative">
-                        <CodeBlock language="bash">{`npm install @limitly/sdk`}</CodeBlock>
+                        <CodeBlock language="bash">{`npm install limitly-sdk`}</CodeBlock>
                         <button
-                          onClick={() => copyToClipboard("npm install @limitly/sdk", "install")}
+                          onClick={() => copyToClipboard("npm install limitly-sdk", "install")}
                           className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                         >
                           {copied === "install" ? (
@@ -247,7 +247,7 @@ function DocsContent() {
                         Get your first rate limiter up and running in just a few lines of code.
                       </p>
                       <div className="relative">
-                        <CodeBlock language="typescript">{`import { rateLimit } from '@limitly/sdk';
+                        <CodeBlock language="typescript">{`import { rateLimit } from 'limitly-sdk';
 
 // Create a rate limiter function
 const checkLimit = rateLimit();
@@ -264,7 +264,7 @@ export default async function handler(req, res) {
   res.status(200).json({ success: true });
 }`}</CodeBlock>
                         <button
-                          onClick={() => copyToClipboard(`import { rateLimit } from '@limitly/sdk';
+                          onClick={() => copyToClipboard(`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
@@ -300,8 +300,8 @@ export default async function handler(req, res) {
   LimitlyConfig, 
   LimitlyResponse, 
   RateLimitOptions 
-} from '@limitly/sdk';
-import { createClient } from '@limitly/sdk';
+} from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
 // Fully typed configuration
 const config: LimitlyConfig = {
@@ -322,8 +322,8 @@ if (result.allowed) {
   console.log(\`Remaining: \${result.remaining}\`);
 }`}</CodeBlock>
                         <button
-                          onClick={() => copyToClipboard(`import type { LimitlyConfig, LimitlyResponse } from '@limitly/sdk';
-import { createClient } from '@limitly/sdk';
+                          onClick={() => copyToClipboard(`import type { LimitlyConfig, LimitlyResponse } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
 const config: LimitlyConfig = { serviceId: 'my-app', timeout: 5000 };
 const client = createClient(config);
@@ -348,7 +348,7 @@ const result: LimitlyResponse = await client.checkRateLimit({
                       </p>
                       <div className="relative">
                         <CodeBlock language="typescript">{`import express from 'express';
-import { rateLimit } from '@limitly/sdk';
+import { rateLimit } from 'limitly-sdk';
 
 const app = express();
 const checkLimit = rateLimit({ serviceId: 'my-api' });
@@ -379,7 +379,7 @@ app.get('/api/data', (req, res) => {
 });`}</CodeBlock>
                         <button
                           onClick={() => copyToClipboard(`import express from 'express';
-import { rateLimit } from '@limitly/sdk';
+import { rateLimit } from 'limitly-sdk';
 
 const app = express();
 const checkLimit = rateLimit({ serviceId: 'my-api' });
@@ -410,7 +410,7 @@ app.use(async (req, res, next) => {
                         Integrate rate limiting into your Next.js API routes.
                       </p>
                       <div className="relative">
-                        <CodeBlock language="typescript">{`import { rateLimit } from '@limitly/sdk';
+                        <CodeBlock language="typescript">{`import { rateLimit } from 'limitly-sdk';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const checkLimit = rateLimit();
@@ -444,7 +444,7 @@ export default async function handler(
   res.status(200).json({ success: true });
 }`}</CodeBlock>
                         <button
-                          onClick={() => copyToClipboard(`import { rateLimit } from '@limitly/sdk';
+                          onClick={() => copyToClipboard(`import { rateLimit } from 'limitly-sdk';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const checkLimit = rateLimit();
@@ -472,7 +472,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         Gracefully handle rate limit errors in your application.
                       </p>
                       <div className="relative">
-                        <CodeBlock language="typescript">{`import { rateLimit } from '@limitly/sdk';
+                        <CodeBlock language="typescript">{`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
@@ -507,7 +507,7 @@ async function apiCall(req, res) {
   }
 }`}</CodeBlock>
                         <button
-                          onClick={() => copyToClipboard(`import { rateLimit } from '@limitly/sdk';
+                          onClick={() => copyToClipboard(`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
@@ -657,7 +657,7 @@ interface LimitlyResponse {
   RateLimitOptions,
   RateLimitInfo,
   HealthResponse
-} from '@limitly/sdk';
+} from 'limitly-sdk';
 
 // Use in your function signatures
 function handleRateLimit(result: LimitlyResponse): void {
@@ -686,7 +686,7 @@ async function protectedRoute(
   RateLimitOptions,
   RateLimitInfo,
   HealthResponse
-} from '@limitly/sdk';`, "types")}
+} from 'limitly-sdk';`, "types")}
                           className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                         >
                           {copied === "types" ? (
@@ -707,7 +707,7 @@ async function protectedRoute(
                     <div id="basic">
                       <h3 className="text-2xl font-bold mb-4">Basic Usage</h3>
                       <div className="relative">
-                        <CodeBlock language="typescript">{`import { rateLimit } from '@limitly/sdk';
+                        <CodeBlock language="typescript">{`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
@@ -722,7 +722,7 @@ if (result.allowed) {
   console.log('Rate limited!');
 }`}</CodeBlock>
                         <button
-                          onClick={() => copyToClipboard(`import { rateLimit } from '@limitly/sdk';
+                          onClick={() => copyToClipboard(`import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 const result = await checkLimit('user-123');
@@ -746,7 +746,7 @@ if (result.allowed) {
                     <div id="advanced">
                       <h3 className="text-2xl font-bold mb-4">Advanced Configuration</h3>
                       <div className="relative">
-                        <CodeBlock language="typescript">{`import { createClient } from '@limitly/sdk';
+                        <CodeBlock language="typescript">{`import { createClient } from 'limitly-sdk';
 
 const client = createClient({
   serviceId: 'api-v2',
@@ -791,7 +791,7 @@ async function checkTieredLimit(req) {
                     <div id="custom-strategies">
                       <h3 className="text-2xl font-bold mb-4">Custom Rate Limit Strategies</h3>
                       <div className="relative">
-                        <CodeBlock language="typescript">{`import { createClient } from '@limitly/sdk';
+                        <CodeBlock language="typescript">{`import { createClient } from 'limitly-sdk';
 
 const client = createClient();
 

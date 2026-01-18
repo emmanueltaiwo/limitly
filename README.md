@@ -19,11 +19,11 @@ Limitly is a centralized rate-limiting service using Redis and token bucket algo
 ## Quick Start
 
 ```bash
-npm install @limitly/sdk
+npm install limitly-sdk
 ```
 
 ```typescript
-import { rateLimit } from '@limitly/sdk';
+import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
@@ -44,7 +44,7 @@ This is a [Turborepo](https://turborepo.org) monorepo containing:
 
 ### Packages
 
-- **`@limitly/sdk`** - TypeScript-first SDK for rate limiting
+- **`limitly-sdk`** - TypeScript-first SDK for rate limiting
   - Client library for Node.js and browsers
   - Full type safety and IntelliSense support
   - See [packages/sdk/README.md](./packages/sdk/README.md)
@@ -111,7 +111,7 @@ turbo build
 turbo dev --filter=web
 
 # Build only the SDK
-turbo build --filter=@limitly/sdk
+turbo build --filter=limitly-sdk
 
 # Build only the core service
 turbo build --filter=@limitly/core
@@ -122,21 +122,21 @@ turbo build --filter=@limitly/core
 ```
 User Application
     ↓
-@limitly/sdk (installed via npm)
+limitly-sdk (installed via npm)
     ↓ HTTP requests
 @limitly/core (hosted service)
     ↓
 Redis (rate limit storage)
 ```
 
-1. Users install `@limitly/sdk` in their applications
+1. Users install `limitly-sdk` in their applications
 2. SDK makes HTTP requests to the hosted `@limitly/core` service
 3. Core service uses Redis with token bucket algorithm for rate limiting
 4. Results returned with rate limit headers and metadata
 
 ## Packages
 
-### @limitly/sdk
+### limitly-sdk
 
 The client SDK that users install in their applications.
 

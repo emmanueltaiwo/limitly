@@ -1,5 +1,5 @@
 {
-  "name": "@limitly/sdk",
+  "name": "limitly-sdk",
   "version": "1.0.1",
   "description": "Official SDK for Limitly rate limiting service",
   "main": "dist/index.js",
@@ -30,6 +30,9 @@
   "peerDependenciesMeta": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/emmanueltaiwo/limitly.git"
+    "url": "git+https://github.com/emmanueltaiwo/limitly.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

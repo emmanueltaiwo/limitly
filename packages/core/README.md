@@ -1,6 +1,6 @@
 # @limitly/core
 
-Centralized rate-limiting service using Redis and token bucket algorithm. Built with TypeScript for maximum type safety. This is the core service that powers `@limitly/sdk`.
+Centralized rate-limiting service using Redis and token bucket algorithm. Built with TypeScript for maximum type safety. This is the core service that powers `limitly-sdk`.
 
 ## Features
 
@@ -18,7 +18,7 @@ Centralized rate-limiting service using Redis and token bucket algorithm. Built 
 Limitly uses a centralized service architecture:
 
 ```
-User Application → @limitly/sdk → HTTP → @limitly/core → Redis
+User Application → limitly-sdk → HTTP → @limitly/core → Redis
 ```
 
 - **SDK** - Client library users install

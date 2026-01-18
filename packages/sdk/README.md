@@ -1,4 +1,4 @@
-# @limitly/sdk
+# limitly-sdk
 
 The best **TypeScript-first** rate limiting SDK for Node.js and browser applications. Free, fast, feature-rich, and fully type-safe.
 
@@ -17,13 +17,13 @@ The best **TypeScript-first** rate limiting SDK for Node.js and browser applicat
 ## Installation
 
 ```bash
-npm install @limitly/sdk
+npm install limitly-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { rateLimit } from '@limitly/sdk';
+import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
@@ -94,7 +94,7 @@ const result = await client.checkRateLimit({
 
 ```typescript
 import express from 'express';
-import { rateLimit } from '@limitly/sdk';
+import { rateLimit } from 'limitly-sdk';
 
 const app = express();
 const checkLimit = rateLimit();
@@ -240,7 +240,7 @@ Limitly is built with TypeScript-first principles:
 - **JSDoc Comments** - Hover documentation for every function
 
 ```typescript
-import type { LimitlyConfig, LimitlyResponse } from '@limitly/sdk';
+import type { LimitlyConfig, LimitlyResponse } from 'limitly-sdk';
 
 // Fully typed configuration
 const config: LimitlyConfig = {
