@@ -113,6 +113,33 @@ Same IP, different limits per service.
 4. **Config changes** - Dynamic per-request configuration
 5. **Missing identifiers** - Falls back to IP address
 
+## Deployment
+
+### Railway
+
+This package includes a Dockerfile for deployment on Railway.
+
+**Prerequisites:**
+- Railway account
+- Redis instance (Railway provides Redis addon)
+
+**Setup Steps:**
+
+1. **Create a new Railway project** and connect your repository
+
+2. **Configure build settings:**
+   - Root Directory: `/` (repository root)
+   - Dockerfile Path: `packages/core/Dockerfile`
+
+3. **Set environment variables:**
+   - `PORT`: Railway will set this automatically
+   - `REDIS_URL`: Your Redis connection string (from Railway Redis addon)
+   - `NODE_ENV`: `production`
+
+4. **Deploy:** Railway will automatically build and deploy
+
+**Alternative:** If you prefer to set the root directory to `packages/core`, you'll need to adjust the Dockerfile paths accordingly.
+
 ## License
 
 ISC
