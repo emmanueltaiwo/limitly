@@ -46,16 +46,21 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package files
+# Copy root package files for workspace structure
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 
-# Copy only production dependencies
-COPY --from=deps /app/node_modules ./node_modules
+# Copy workspace package.json files to maintain workspace structure
+COPY --from=builder /app/packages/core/package.json ./packages/core/package.json
+COPY --from=builder /app/packages/typescript-config/package.json ./packages/typescript-config/package.json
+
+# Install only production dependencies at root level
+# This hoists all production deps to /app/node_modules where Node.js can find them
+# Using npm install to handle potential lock file sync issues
+RUN npm install --omit=dev
 
 # Copy built application
 COPY --from=builder /app/packages/core/dist ./packages/core/dist
-COPY --from=builder /app/packages/core/package.json ./packages/core/package.json
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 5000
