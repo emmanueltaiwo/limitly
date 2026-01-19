@@ -10,10 +10,10 @@ Get started with Limitly in minutes.
 ## Basic Example
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
-const result = await checkLimit('user-123');
+const client = createClient();
+const result = await client.checkRateLimit('user-123');
 
 if (result.allowed) {
   console.log(`Allowed. Remaining: ${result.remaining}`);
@@ -28,14 +28,14 @@ if (result.allowed) {
 
 ```typescript
 // app/api/route.ts
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
+const client = createClient({ serviceId: 'nextjs-api' });
 
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
@@ -49,13 +49,13 @@ export async function GET(request: Request) {
 
 ```typescript
 // pages/api/route.ts
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
+const client = createClient({ serviceId: 'nextjs-api' });
 
 export default async function handler(req, res) {
   const userId = req.headers['x-user-id'] || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return res.status(429).json({ error: 'Rate limit exceeded' });
@@ -69,12 +69,12 @@ export default async function handler(req, res) {
 
 ```typescript
 // middleware/rate-limit.ts
-import { rateLimit } from 'limitly-sdk';
-const checkLimit = rateLimit({ serviceId: 'express-api' });
+import { createClient } from 'limitly-sdk';
+const client = createClient({ serviceId: 'express-api' });
 
 export async function rateLimitMiddleware(req, res, next) {
   const identifier = req.user?.id || req.ip || 'anonymous';
-  const result = await checkLimit(identifier);
+  const result = await client.checkRateLimit(identifier);
   
   if (!result.allowed) {
     return res.status(429).json({ error: 'Rate limit exceeded' });
@@ -91,11 +91,11 @@ app.use('/api', rateLimitMiddleware);
 ### Fastify
 
 ```typescript
-const checkLimit = rateLimit({ serviceId: 'fastify-api' });
+const client = createClient({ serviceId: 'fastify-api' });
 
 fastify.addHook('onRequest', async (request, reply) => {
   const identifier = request.user?.id || request.ip || 'anonymous';
-  const result = await checkLimit(identifier);
+  const result = await client.checkRateLimit(identifier);
   
   if (!result.allowed) {
     return reply.code(429).send({ error: 'Rate limit exceeded' });
@@ -106,11 +106,11 @@ fastify.addHook('onRequest', async (request, reply) => {
 ### Hono
 
 ```typescript
-const checkLimit = rateLimit({ serviceId: 'hono-api' });
+const client = createClient({ serviceId: 'hono-api' });
 
 app.use('*', async (c, next) => {
   const identifier = c.req.header('x-user-id') || 'anonymous';
-  const result = await checkLimit(identifier);
+  const result = await client.checkRateLimit(identifier);
   
   if (!result.allowed) {
     return c.json({ error: 'Rate limit exceeded' }, 429);
@@ -122,7 +122,7 @@ app.use('*', async (c, next) => {
 ## Custom Limits
 
 ```typescript
-const checkLimit = rateLimit({ serviceId: 'my-api' });
+const client = createClient({ serviceId: 'my-api' });
 
 // Per-endpoint limits
 const limits = {
@@ -130,7 +130,7 @@ const limits = {
   '/api/upload': { capacity: 10, refillRate: 1 }
 };
 
-const result = await checkLimit({
+const result = await client.checkRateLimit({
   identifier: userId,
   ...limits[endpoint]
 });
@@ -141,5 +141,19 @@ const tierLimits = {
   premium: { capacity: 1000, refillRate: 100 }
 };
 
-await checkLimit({ identifier: user.id, ...tierLimits[user.plan] });
+await client.checkRateLimit({ identifier: user.id, ...tierLimits[user.plan] });
+```
+
+## Bring Your Own Redis
+
+For full tenant isolation, provide your own Redis URL:
+
+```typescript
+const client = createClient({
+  redisUrl: 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
+// All rate limit data stored in your Redis
+const result = await client.checkRateLimit('user-123');
 ```

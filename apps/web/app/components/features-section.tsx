@@ -31,8 +31,8 @@ export function FeaturesSection() {
     },
     {
       icon: Shield,
-      title: "Service Isolation",
-      description: "Each service gets isolated rate limits. Same IP across sites? No problem.",
+      title: "Bring Your Own Redis",
+      description: "Optional Redis URL for full tenant isolation. Use your own Redis or the hosted service.",
       gradient: "from-indigo-500/20 to-blue-500/10",
     },
     {

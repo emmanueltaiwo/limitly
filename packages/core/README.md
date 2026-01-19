@@ -15,15 +15,21 @@ Centralized rate-limiting service using Redis and token bucket algorithm. Built 
 
 ## Architecture
 
-Limitly uses a centralized service architecture:
+Limitly supports two modes:
 
+**HTTP API Mode (default):**
 ```
 User Application → limitly-sdk → HTTP → @limitly/core → Redis
 ```
 
+**Direct Redis Mode (optional):**
+```
+User Application → limitly-sdk → User's Redis
+```
+
 - **SDK** - Client library users install
-- **Core** - This service (hosted by Limitly)
-- **Redis** - Stores rate limit state
+- **Core** - This service (hosted by Limitly, used when no redisUrl provided)
+- **Redis** - Stores rate limit state (can be user's own Redis or hosted)
 
 ## API Endpoints
 
@@ -112,6 +118,7 @@ Same IP, different limits per service.
 3. **Concurrent requests** - Atomic Lua scripts
 4. **Config changes** - Dynamic per-request configuration
 5. **Missing identifiers** - Falls back to IP address
+6. **Tenant isolation** - Users can provide their own Redis URL for full isolation
 
 ## Deployment
 

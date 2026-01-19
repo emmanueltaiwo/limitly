@@ -9,12 +9,12 @@ description: Protect your Express routes with Limitly. Learn how to create middl
 
 ```typescript
 // middleware/rate-limit.ts
-import { rateLimit } from 'limitly-sdk';
-const checkLimit = rateLimit({ serviceId: 'express-api' });
+import { createClient } from 'limitly-sdk';
+const client = createClient({ serviceId: 'express-api' });
 
 export async function rateLimitMiddleware(req, res, next) {
   const identifier = req.user?.id || req.ip || 'anonymous';
-  const result = await checkLimit(identifier);
+  const result = await client.checkRateLimit(identifier);
   
   if (!result.allowed) {
     return res.status(429).json({ error: 'Rate limit exceeded' });
@@ -40,9 +40,9 @@ app.get('/api/data', rateLimitMiddleware, (req, res) => {
 
 ```typescript
 function createRateLimitMiddleware(capacity: number, refillRate: number) {
-  const checkLimit = rateLimit({ serviceId: 'express-api' });
+  const client = createClient({ serviceId: 'express-api' });
   return async (req, res, next) => {
-    const result = await checkLimit({ identifier: req.user?.id || req.ip, capacity, refillRate });
+    const result = await client.checkRateLimit({ identifier: req.user?.id || req.ip, capacity, refillRate });
     if (!result.allowed) return res.status(429).json({ error: 'Rate limit exceeded' });
     next();
   };

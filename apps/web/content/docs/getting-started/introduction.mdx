@@ -15,15 +15,16 @@ Rate limiting controls traffic to prevent abuse, ensure fair usage, and maintain
 
 - **Zero Configuration**: Get started instantly with sensible defaults
 - **Redis-Backed**: Distributed rate limiting across multiple servers
+- **Bring Your Own Redis**: Optional Redis URL for full tenant isolation
 - **TypeScript First**: Full type safety and IDE autocomplete
 - **Flexible**: Customize limits per user, endpoint, or use case
 - **Production Ready**: Error handling, timeouts, and best practices built-in
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
-const result = await checkLimit('user-123');
+const client = createClient();
+const result = await client.checkRateLimit('user-123');
 
 if (result.allowed) {
   console.log(`Remaining: ${result.remaining}`);
@@ -47,6 +48,6 @@ Limitly uses the **Token Bucket Algorithm**:
 ## Getting Started
 
 1. Install: `npm install limitly-sdk`
-2. Use: `const checkLimit = rateLimit(); await checkLimit('user-123');`
+2. Use: `const client = createClient(); await client.checkRateLimit('user-123');`
 
 See [Installation](./installation) for setup or [Quick Start](./quick-start) for examples.

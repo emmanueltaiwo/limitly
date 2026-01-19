@@ -9,6 +9,7 @@ Limitly is a centralized rate-limiting service using Redis and token bucket algo
 - ⚡ **TypeScript-First** - Fully typed with excellent IDE support
 - 🆓 **Free Forever** - No API keys, no payments, no limits
 - 🚀 **Distributed** - Redis-backed for multi-server deployments
+- 🔐 **Bring Your Own Redis** - Optional Redis URL for full tenant isolation
 - ⚙️ **Token Bucket** - More accurate than fixed window limits
 - 🔒 **Service Isolation** - Same IP across sites? No problem
 - 🎯 **Dynamic Config** - Per-request limits without redeployment
@@ -23,12 +24,12 @@ npm install limitly-sdk
 ```
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+const client = createClient();
 
 async function handler(req, res) {
-  const result = await checkLimit(req.userId || req.ip);
+  const result = await client.checkRateLimit(req.userId || req.ip);
   
   if (!result.allowed) {
     return res.status(429).json({ error: 'Too many requests' });
@@ -36,6 +37,15 @@ async function handler(req, res) {
   
   // Process request...
 }
+```
+
+**Or use your own Redis for full tenant isolation:**
+
+```typescript
+const client = createClient({
+  redisUrl: 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 ```
 
 ## Project Structure
@@ -119,6 +129,7 @@ turbo build --filter=@limitly/core
 
 ## Architecture
 
+**HTTP API Mode (default):**
 ```
 User Application
     ↓
@@ -129,10 +140,20 @@ limitly-sdk (installed via npm)
 Redis (rate limit storage)
 ```
 
+**Direct Redis Mode (optional):**
+```
+User Application
+    ↓
+limitly-sdk (with redisUrl config)
+    ↓
+User's Redis (full tenant isolation)
+```
+
 1. Users install `limitly-sdk` in their applications
-2. SDK makes HTTP requests to the hosted `@limitly/core` service
-3. Core service uses Redis with token bucket algorithm for rate limiting
-4. Results returned with rate limit headers and metadata
+2. If `redisUrl` is provided, SDK connects directly to user's Redis
+3. If not provided, SDK makes HTTP requests to the hosted `@limitly/core` service
+4. Token bucket algorithm ensures accurate rate limiting
+5. Results returned with rate limit headers and metadata
 
 ## Packages
 

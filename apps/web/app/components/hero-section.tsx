@@ -70,7 +70,7 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-base sm:text-xl md:text-2xl text-white/60 mb-10 sm:mb-14 max-w-3xl mx-auto leading-relaxed font-light px-2"
           >
-            The best TypeScript-first rate limiting SDK for Node.js and browsers. Redis-backed distributed rate limiting with zero configuration needed.
+            The best TypeScript-first rate limiting SDK for Node.js and browsers. Redis-backed distributed rate limiting with optional bring-your-own Redis support.
           </motion.p>
 
           {/* CTA buttons */}

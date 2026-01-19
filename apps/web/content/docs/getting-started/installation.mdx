@@ -21,10 +21,10 @@ npm install limitly-sdk
 ## Basic Usage
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
-const result = await checkLimit('user-123');
+const client = createClient();
+const result = await client.checkRateLimit('user-123');
 
 if (result.allowed) {
   console.log(`Allowed. ${result.remaining} remaining.`);
@@ -36,7 +36,16 @@ if (result.allowed) {
 ### Service Isolation
 
 ```typescript
-const checkLimit = rateLimit({ serviceId: 'my-api-service' });
+const client = createClient({ serviceId: 'my-api-service' });
+```
+
+### Bring Your Own Redis
+
+```typescript
+const client = createClient({
+  redisUrl: 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 ```
 
 ## Framework Setup
@@ -45,13 +54,13 @@ const checkLimit = rateLimit({ serviceId: 'my-api-service' });
 
 ```typescript
 // lib/rate-limit.ts
-import { rateLimit } from 'limitly-sdk';
-export const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
+import { createClient } from 'limitly-sdk';
+export const client = createClient({ serviceId: 'nextjs-api' });
 
 // app/api/route.ts
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return Response.json({ error: 'Rate limit exceeded' }, { status: 429 });
@@ -64,12 +73,12 @@ export async function GET(request: Request) {
 
 ```typescript
 // middleware/rate-limit.ts
-import { rateLimit } from 'limitly-sdk';
-const checkLimit = rateLimit({ serviceId: 'express-api' });
+import { createClient } from 'limitly-sdk';
+const client = createClient({ serviceId: 'express-api' });
 
 export async function rateLimitMiddleware(req, res, next) {
   const identifier = req.user?.id || req.ip || 'anonymous';
-  const result = await checkLimit(identifier);
+  const result = await client.checkRateLimit(identifier);
   
   if (!result.allowed) {
     return res.status(429).json({ error: 'Rate limit exceeded' });

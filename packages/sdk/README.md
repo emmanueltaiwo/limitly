@@ -7,6 +7,7 @@ The best **TypeScript-first** rate limiting SDK for Node.js and browser applicat
 ✅ **TypeScript-First** - Built with TypeScript from the ground up. Full type safety and excellent IDE support  
 ✅ **Free** - No API keys or payments required  
 ✅ **Distributed** - Redis-backed for multi-server deployments  
+✅ **Bring Your Own Redis** - Optional Redis URL for full tenant isolation  
 ✅ **Token Bucket Algorithm** - More accurate than fixed windows  
 ✅ **Rate Limit Headers** - Standard `X-RateLimit-*` headers included  
 ✅ **Dynamic Configuration** - Per-route limits without redeployment  
@@ -23,14 +24,14 @@ npm install limitly-sdk
 ## Quick Start
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+const client = createClient();
 
 // Next.js App Router example
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'unknown';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return Response.json(
@@ -57,7 +58,7 @@ const result = await checkLimit('user-123');
 // result.reset - timestamp when limit resets
 ```
 
-### 2. Service Isolation
+### 3. Service Isolation
 
 Prevent cross-site collisions with service IDs:
 
@@ -72,7 +73,7 @@ const client = createClient({
 const result = await client.checkRateLimit('user-123');
 ```
 
-### 3. Dynamic Configuration
+### 4. Dynamic Configuration
 
 Set limits per request without code changes:
 
@@ -95,19 +96,18 @@ const result = await client.checkRateLimit({
 });
 ```
 
-### 5. Express.js Middleware
+### 6. Express.js Middleware
 
 ```typescript
 import express from 'express';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
 const app = express();
-const checkLimit = rateLimit();
+const client = createClient({ serviceId: 'my-api' });
 
 app.use(async (req, res, next) => {
-  const result = await checkLimit({
+  const result = await client.checkRateLimit({
     identifier: req.user?.id || req.ip,
-    serviceId: 'my-api',
     capacity: 100,
     refillRate: 10
   });
@@ -129,15 +129,6 @@ app.use(async (req, res, next) => {
 
 ## API
 
-### `rateLimit(config?: LimitlyConfig)`
-
-Quick helper function that returns an async function to check rate limits.
-
-```typescript
-const checkLimit = rateLimit({ serviceId: 'my-app' });
-const result = await checkLimit('user-123');
-```
-
 ### `createClient(config?: LimitlyConfig)`
 
 Creates a new Limitly client instance.
@@ -146,6 +137,7 @@ Creates a new Limitly client instance.
 - `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev)
 - `serviceId` (string, optional): Isolate rate limits per service
 - `timeout` (number, optional): Request timeout in ms (default: 5000)
+- `redisUrl` (string, optional): Redis connection URL for direct Redis mode. If provided, SDK connects directly to your Redis. If not provided, uses HTTP API mode.
 
 ### `client.checkRateLimit(options?: RateLimitOptions | string)`
 
@@ -203,17 +195,17 @@ app.get('/api/data', async (req, res) => {
 
 ```typescript
 // middleware.ts
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
-const checkLimit = rateLimit();
+const client = createClient({ serviceId: 'my-app' });
 
 export async function middleware(request: NextRequest) {
   // Get user from your auth system
   const user = await getUser(request); // Your auth logic
   const isPremium = user?.plan === 'premium';
   
-  const result = await checkLimit({
+  const result = await client.checkRateLimit({
     identifier: user?.id || request.ip || 'unknown',
     capacity: isPremium ? 1000 : 100,
     refillRate: isPremium ? 100 : 10,
@@ -266,11 +258,14 @@ import type { LimitlyConfig, LimitlyResponse } from 'limitly-sdk';
 // Fully typed configuration
 const config: LimitlyConfig = {
   serviceId: 'my-app',
+  redisUrl: 'redis://localhost:6379',
   timeout: 5000
 };
 
+const client = createClient(config);
+
 // Type-safe response
-const result: LimitlyResponse = await checkLimit('user-123');
+const result: LimitlyResponse = await client.checkRateLimit('user-123');
 // TypeScript knows: result.allowed is boolean
 // TypeScript knows: result.remaining is number | undefined
 ```
