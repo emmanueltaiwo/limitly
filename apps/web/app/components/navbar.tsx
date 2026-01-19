@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@repo/ui/button";
 import { NpmIcon } from "./npm-icon";
@@ -33,13 +34,19 @@ export function Navbar({hideLinks = false}:Props) {
         <div className="flex items-center justify-between h-16 sm:h-20">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link href="/" className="text-xl sm:text-2xl font-black tracking-tight inline-flex items-center gap-2 group">
-              <motion.span
+              <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                className="text-2xl sm:text-3xl"
+                className="relative w-6 h-6 sm:w-8 sm:h-8"
               >
-                ⚡
-              </motion.span>
+                <Image
+                  src="/logo.png"
+                  alt="Limitly Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
+              </motion.div>
               <span className="bg-linear-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
                 Limitly
               </span>

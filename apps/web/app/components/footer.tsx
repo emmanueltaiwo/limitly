@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { NpmIcon } from "./npm-icon";
 
@@ -16,13 +17,20 @@ export function Footer() {
             transition={{ duration: 0.6 }}
           >
             <h3 className="text-2xl font-black mb-3 inline-flex items-center gap-2">
-              <motion.span
+              <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                className="relative w-6 h-6"
               >
-                ⚡
-              </motion.span>
-              <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                <Image
+                  src="/logo.png"
+                  alt="Limitly Logo"
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
+              </motion.div>
+              <span className="bg-linear-to-r from-white to-white/70 bg-clip-text text-transparent">
                 Limitly
               </span>
             </h3>
