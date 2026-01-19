@@ -233,14 +233,19 @@ async function withRateLimit<T>(
   onAllowed: RateLimitHandler<T>,
   onRateLimited: RateLimitHandler<T>
 ): Promise<T> {
-  const client = createClient();
+  const client = createClient({
+    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    serviceId: 'my-app'
+  });
   const result = await client.checkRateLimit(identifier);
   
   return result.allowed ? onAllowed(result) : onRateLimited(result);
 }
 ```
 
-// Usage
+Usage:
+
+```typescript
 const response = await withRateLimit(
   'user-123',
   (result) => ({ success: true, remaining: result.remaining }),

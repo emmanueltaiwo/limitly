@@ -68,7 +68,6 @@ const client = createClient({
   redisUrl: process.env.REDIS_URL,
   serviceId: 'user-api'
 });
-```
 
 async function handleUserRequest(userId: string) {
   const result = await client.checkRateLimit(userId);

@@ -32,7 +32,11 @@ export async function GET(request: Request) {
 // lib/rate-limit.ts
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'nextjs-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'nextjs-api'
+});
 
 export async function withRateLimit(request: Request, handler: Function) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
@@ -46,7 +50,9 @@ export async function withRateLimit(request: Request, handler: Function) {
 }
 ```
 
-// Usage
+Usage:
+
+```typescript
 export async function GET(request: Request) {
   return withRateLimit(request, async () => {
     return NextResponse.json({ data: 'Protected data' });
