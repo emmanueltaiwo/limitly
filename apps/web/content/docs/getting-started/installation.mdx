@@ -1,81 +1,30 @@
 ---
 title: Installation
-description: Get started with Limitly in seconds. Install via npm, set up Redis, and you're ready to protect your APIs.
+description: Get started with Limitly in seconds. Install the SDK and you're ready to protect your APIs - no configuration needed.
 ---
 
 # Installation
 
-Get Limitly up and running in your project in just a few minutes. This guide covers everything you need to get started.
+Get Limitly up and running in your project in just a few minutes. Limitly is a free, hosted rate limiting service - no API keys, no Redis setup, just install and use.
 
 ## Prerequisites
 
 Before installing Limitly, make sure you have:
 
 - **Node.js** 14 or higher
-- **Redis** server (local or cloud)
-- **npm**, **yarn**, or **pnpm** package manager
+- **npm** package manager
 
 ## Step 1: Install the Package
 
-Install Limitly using your preferred package manager:
+Install Limitly using npm:
 
 ```bash
-# Using npm
 npm install limitly-sdk
-
-# Using yarn
-yarn add limitly-sdk
-
-# Using pnpm
-pnpm add limitly-sdk
 ```
 
-## Step 2: Set Up Redis
+That's it! No API keys, no configuration files, no Redis setup required.
 
-Limitly requires a Redis instance to store rate limit state. You have several options:
-
-### Option A: Local Redis (Development)
-
-Install and run Redis locally:
-
-```bash
-# macOS (using Homebrew)
-brew install redis
-brew services start redis
-
-# Linux (Ubuntu/Debian)
-sudo apt-get install redis-server
-sudo systemctl start redis
-
-# Docker
-docker run -d -p 6379:6379 redis:alpine
-```
-
-### Option B: Redis Cloud (Production)
-
-Use a managed Redis service for production:
-
-- **Redis Cloud**: [redis.com/cloud](https://redis.com/cloud)
-- **Upstash**: [upstash.com](https://upstash.com)
-- **AWS ElastiCache**: [aws.amazon.com/elasticache](https://aws.amazon.com/elasticache)
-- **Azure Cache**: [azure.microsoft.com/services/cache](https://azure.microsoft.com/services/cache)
-
-### Option C: Environment Variables
-
-Set your Redis connection URL:
-
-```bash
-# .env file
-REDIS_URL=redis://localhost:6379
-
-# Or with authentication
-REDIS_URL=redis://:password@localhost:6379
-
-# Or for Redis Cloud
-REDIS_URL=rediss://:password@your-redis-host:port
-```
-
-## Step 3: Verify Installation
+## Step 2: Verify Installation
 
 Create a simple test file to verify everything works:
 
@@ -84,6 +33,7 @@ Create a simple test file to verify everything works:
 import { rateLimit } from 'limitly-sdk';
 
 async function test() {
+  // Create a rate limiter - works out of the box!
   const checkLimit = rateLimit();
   
   // Test rate limiting
@@ -113,58 +63,77 @@ Allowed: true
 Remaining: 99
 ```
 
-## Configuration Examples
+## Basic Usage
 
-### Basic Configuration
-
-The simplest setup uses default values:
+The simplest setup uses default values - no configuration needed:
 
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
-// Uses default Redis connection and settings
+// Works out of the box - connects to Limitly's hosted service
 const checkLimit = rateLimit();
+
+// Check rate limit
+const result = await checkLimit('user-123');
+
+if (result.allowed) {
+  console.log(`Request allowed. ${result.remaining} remaining.`);
+} else {
+  console.log('Rate limited!');
+}
 ```
 
-### Custom Service ID
+## Optional Configuration
 
-Isolate rate limits by service:
+While Limitly works with zero configuration, you can optionally customize it:
+
+### Service Isolation
+
+Isolate rate limits by service to prevent collisions across different applications:
 
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
+// Each service gets its own rate limit buckets
 const checkLimit = rateLimit({
   serviceId: 'my-api-service'
 });
 ```
 
-### Custom Redis Connection
+### Custom Base URL
 
-Connect to a specific Redis instance:
+If you're self-hosting the Limitly API service:
 
 ```typescript
 import { createClient } from 'limitly-sdk';
 
 const client = createClient({
+  baseUrl: 'https://your-limitly-instance.com',
   serviceId: 'my-app',
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  timeout: 5000 // Request timeout in milliseconds
+  timeout: 5000  // Request timeout in milliseconds
 });
 ```
 
-### Environment-Based Configuration
+### Multiple Services
 
-Use environment variables for different environments:
+Create different clients for different services:
 
 ```typescript
-// config/limitly.ts
 import { createClient } from 'limitly-sdk';
 
-export const limitlyClient = createClient({
-  serviceId: process.env.SERVICE_ID || 'default',
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  timeout: parseInt(process.env.REDIS_TIMEOUT || '5000', 10)
+// API service
+const apiClient = createClient({
+  serviceId: 'api-service'
 });
+
+// Authentication service
+const authClient = createClient({
+  serviceId: 'auth-service'
+});
+
+// Each service has independent rate limit buckets
+await apiClient.checkRateLimit({ identifier: 'user-123' });
+await authClient.checkRateLimit({ identifier: 'user-123' });
 ```
 
 ## Framework-Specific Setup
@@ -212,14 +181,16 @@ Create middleware:
 import { rateLimit } from 'limitly-sdk';
 import type { Request, Response, NextFunction } from 'express';
 
-const checkLimit = rateLimit({ serviceId: 'express-api' });
+const checkLimit = rateLimit({
+  serviceId: 'express-api'
+});
 
 export async function rateLimitMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-  const identifier = req.user?.id || req.ip || 'anonymous';
+  const identifier = (req as any).user?.id || req.ip || 'anonymous';
   const result = await checkLimit(identifier);
   
   if (!result.allowed) {
@@ -253,68 +224,47 @@ app.get('/api/data', (req, res) => {
 });
 ```
 
-### Fastify
+## How It Works
 
-Create a plugin:
+Limitly uses a hosted API service that handles all the rate limiting logic:
 
-```typescript
-// plugins/rate-limit.ts
-import { FastifyPluginAsync } from 'fastify';
-import { rateLimit } from 'limitly-sdk';
-
-const checkLimit = rateLimit({ serviceId: 'fastify-api' });
-
-const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
-  fastify.addHook('onRequest', async (request, reply) => {
-    const identifier = request.user?.id || request.ip || 'anonymous';
-    const result = await checkLimit(identifier);
-    
-    if (!result.allowed) {
-      const retryAfter = result.reset 
-        ? Math.ceil((result.reset - Date.now()) / 1000) 
-        : 60;
-      
-      reply.header('Retry-After', retryAfter.toString());
-      return reply.code(429).send({
-        error: 'Rate limit exceeded',
-        retryAfter
-      });
-    }
-  });
-};
-
-export default rateLimitPlugin;
-```
+- **No infrastructure needed**: The SDK connects to `https://api.limitly.emmanueltaiwo.dev` by default
+- **Free to use**: No API keys or payments required
+- **Distributed**: Works across multiple servers and instances
+- **Redis-backed**: The service uses Redis for fast, distributed rate limiting
+- **Graceful degradation**: If the service is unavailable, requests are allowed (fail open)
 
 ## Troubleshooting
 
 ### Connection Issues
 
-If you see connection errors, check:
+If you see connection errors:
 
-1. **Redis is running**: `redis-cli ping` should return `PONG`
-2. **Correct URL**: Verify `REDIS_URL` environment variable
-3. **Network access**: Ensure your application can reach Redis
-4. **Authentication**: Check if Redis requires a password
+1. **Check your internet connection**: The SDK needs to connect to Limitly's hosted service
+2. **Verify the service URL**: Default is `https://api.limitly.emmanueltaiwo.dev`
+3. **Check firewall**: Ensure your server can make outbound HTTPS requests
+4. **Timeout settings**: Increase timeout if you have slow network connections
 
 ### Common Errors
 
-**Error: "ECONNREFUSED"**
-- Redis server is not running
-- Wrong host/port in connection URL
+**Error: "Rate limit check timed out"**
+- Network connection is slow
+- Increase timeout in client configuration: `timeout: 10000`
 
-**Error: "NOAUTH Authentication required"**
-- Redis requires a password
-- Add password to connection URL: `redis://:password@host:port`
+**Error: "Rate limit check failed"**
+- Service is temporarily unavailable
+- The SDK will fail open (allow requests) by default
+- Check service status if issues persist
 
-**Error: "Timeout"**
-- Redis server is slow or unreachable
-- Increase timeout in client configuration
+**No errors but rate limiting not working**
+- Check that you're passing an identifier to `checkLimit()`
+- Verify the service ID is correct if using one
+- Check network connectivity to the API service
 
 ## Next Steps
 
 Now that you have Limitly installed, check out:
 
-- ⚡ [Quick Start](./quick-start) - See Limitly in action
-- 📚 [Basic Examples](../examples/basic) - Common use cases
+- ⚡ [Quick Start](./quick-start) - See Limitly in action with real examples
+- 📚 [Basic Examples](../examples/basic) - Common use cases and patterns
 - 🔧 [API Reference](../api-reference/createclient) - Full API documentation
