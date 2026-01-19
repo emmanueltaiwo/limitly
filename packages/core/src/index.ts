@@ -1,6 +1,7 @@
 import app from './app.js';
 import { envConfig } from './config/env.js';
 import { redisClient } from './config/redis.js';
+import { initPostHog, shutdownPostHog } from './config/posthog.js';
 
 const server = app.listen(envConfig.PORT, async () => {
   try {
@@ -11,6 +12,13 @@ const server = app.listen(envConfig.PORT, async () => {
     }
 
     console.log('Redis connected');
+
+    // Initialize PostHog analytics
+    const posthog = initPostHog();
+    if (posthog) {
+      console.log('PostHog analytics initialized');
+    }
+
     console.log(`Server is running on port ${envConfig.PORT}`);
   } catch (error) {
     console.error('Server startup error', error);
@@ -21,6 +29,7 @@ const server = app.listen(envConfig.PORT, async () => {
 process.on('SIGINT', async () => {
   server.close(async () => {
     await redisClient.disconnect();
+    await shutdownPostHog();
     console.log('Server is shutting down');
   });
 });
@@ -28,6 +37,7 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   server.close(async () => {
     await redisClient.disconnect();
+    await shutdownPostHog();
     console.log('Server is shutting down');
   });
 });

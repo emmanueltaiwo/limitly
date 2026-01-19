@@ -1,5 +1,6 @@
 import RateLimiter from '../algorithms/rateLimiter.js';
 import type { Request, Response, NextFunction } from 'express';
+import { trackRateLimitResult } from '../analytics/events.js';
 
 /**
  * Express middleware for rate limiting
@@ -29,6 +30,14 @@ export const rateLimitMiddleware =
         : undefined;
 
     const result = await limiter.check(serviceId, clientId, config);
+
+    // Track analytics event
+    trackRateLimitResult(serviceId, clientId, result, {
+      hasCustomConfig: !!config,
+      customCapacity: config?.capacity,
+      customRefillRate: config?.refillRate,
+      ipAddress: req.ip,
+    });
 
     res.setHeader('X-RateLimit-Limit', result.limit.toString());
     res.setHeader('X-RateLimit-Remaining', Math.max(0, result.remaining).toString());
