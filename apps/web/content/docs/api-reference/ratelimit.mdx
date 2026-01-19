@@ -196,12 +196,5 @@ export async function GET(request: Request) {
 When no configuration is provided, `rateLimit()` uses:
 
 - **Service ID**: `'default'`
-- **Redis URL**: `process.env.REDIS_URL` or `'redis://localhost:6379'`
 - **Timeout**: `5000` milliseconds
 - **Default limits**: `capacity: 100`, `refillRate: 10`
-
-## See Also
-
-- [createClient()](./createclient) - For advanced configurations
-- [checkRateLimit()](./checkratelimit) - Client method documentation
-- [Type Definitions](./types) - Complete type reference

@@ -39,18 +39,6 @@ if (result.allowed) {
 const checkLimit = rateLimit({ serviceId: 'my-api-service' });
 ```
 
-### Custom Base URL
-
-```typescript
-import { createClient } from 'limitly-sdk';
-
-const client = createClient({
-  baseUrl: 'https://your-limitly-instance.com',
-  serviceId: 'my-app',
-  timeout: 5000
-});
-```
-
 ## Framework Setup
 
 ### Next.js
@@ -95,9 +83,3 @@ export async function rateLimitMiddleware(req, res, next) {
 **Connection errors**: Check internet connection and firewall settings  
 **Timeout errors**: Increase timeout: `timeout: 10000`  
 **Not working**: Verify identifier is passed and service ID is correct
-
-## Next Steps
-
-- [Quick Start](./quick-start) - See it in action
-- [Basic Examples](../examples/basic) - Common patterns
-- [API Reference](../api-reference/createclient) - Full docs

@@ -77,51 +77,6 @@ await authClient.checkRateLimit({ identifier: 'user-123' });
 await jobClient.checkRateLimit({ identifier: 'user-123' });
 ```
 
-## Custom Redis Connection
-
-Connect to a specific Redis instance:
-
-```typescript
-const client = createClient({
-  serviceId: 'my-app',
-  redisUrl: 'redis://localhost:6379'
-});
-```
-
-With authentication:
-
-```typescript
-const client = createClient({
-  serviceId: 'my-app',
-  redisUrl: 'redis://:password@localhost:6379'
-});
-```
-
-Using environment variables:
-
-```typescript
-const client = createClient({
-  serviceId: 'my-app',
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-```
-
-For Redis Cloud or managed services:
-
-```typescript
-// Redis Cloud (TLS)
-const client = createClient({
-  serviceId: 'production-api',
-  redisUrl: 'rediss://:password@your-redis-host:port'
-});
-
-// Upstash
-const client = createClient({
-  serviceId: 'production-api',
-  redisUrl: process.env.UPSTASH_REDIS_REST_URL
-});
-```
-
 ## Custom Timeout
 
 Set a custom timeout for Redis operations:
@@ -227,7 +182,6 @@ async function checkLimitSafely(userId: string) {
 ## Best Practices
 
 1. **Use service IDs**: Always specify a `serviceId` to isolate rate limits
-2. **Environment variables**: Use environment variables for Redis URLs in production
 3. **Connection pooling**: Limitly handles connection pooling automatically
 4. **Singleton pattern**: Create clients once and reuse them:
 
@@ -247,9 +201,3 @@ export function getLimitlyClient() {
   return client;
 }
 ```
-
-## See Also
-
-- [rateLimit()](./ratelimit) - Quick helper function for simple use cases
-- [checkRateLimit()](./checkratelimit) - Check rate limits with a client
-- [Type Definitions](./types) - Complete type reference

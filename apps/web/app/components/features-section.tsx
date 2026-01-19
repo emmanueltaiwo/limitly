@@ -1,0 +1,104 @@
+"use client";
+
+import { motion } from "motion/react";
+import { Zap, Lock, Settings, Gauge, Shield, ChevronRight } from "lucide-react";
+
+export function FeaturesSection() {
+  const features = [
+    {
+      icon: Zap,
+      title: "TypeScript-First",
+      description: "Fully typed with excellent IDE support. Catch errors at compile time, not runtime.",
+      gradient: "from-yellow-500/20 to-orange-500/10",
+    },
+    {
+      icon: Lock,
+      title: "Free Forever",
+      description: "No API keys, no payments, no limits on usage. Completely free for all projects.",
+      gradient: "from-green-500/20 to-emerald-500/10",
+    },
+    {
+      icon: Settings,
+      title: "Zero Config",
+      description: "Works out of the box. Install, import, and start rate limiting in seconds.",
+      gradient: "from-blue-500/20 to-cyan-500/10",
+    },
+    {
+      icon: Gauge,
+      title: "Token Bucket",
+      description: "Advanced token bucket algorithm for smooth, continuous rate limiting.",
+      gradient: "from-purple-500/20 to-pink-500/10",
+    },
+    {
+      icon: Shield,
+      title: "Service Isolation",
+      description: "Each service gets isolated rate limits. Same IP across sites? No problem.",
+      gradient: "from-indigo-500/20 to-blue-500/10",
+    },
+    {
+      icon: ChevronRight,
+      title: "Dynamic Config",
+      description: "Set limits per request without redeployment. Adjust on the fly.",
+      gradient: "from-rose-500/20 to-red-500/10",
+    },
+  ];
+
+  return (
+    <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-20"
+        >
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 sm:mb-8 tracking-tighter px-2">
+            Built for <span className="bg-linear-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent">developers</span>
+          </h2>
+          <p className="text-base sm:text-xl md:text-2xl text-white/60 max-w-3xl mx-auto font-light px-2">
+            Everything you need to implement sophisticated rate limiting without the complexity.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          {features.map((feature, i) => {
+            const Icon = feature.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group relative"
+              >
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl rounded-3xl bg-gradlinearient-to-br ${feature.gradient}`} />
+                <div className="relative p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-xl hover:border-white/30 transition-all duration-500 cursor-pointer h-full">
+                  <motion.div 
+                    className="mb-4 sm:mb-6 inline-flex p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-linear-to-br from-white/10 to-white/5 group-hover:from-white/20 group-hover:to-white/10 transition-all duration-500 relative overflow-hidden"
+                    whileHover={{ rotate: [0, -10, 10, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white relative z-10" />
+                    <motion.div
+                      className="absolute inset-0 bg-white/20"
+                      initial={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1, opacity: 0.3 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </motion.div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-linear-to-b from-white to-white/80 bg-clip-text text-transparent">
+                    {feature.title}
+                  </h3>
+                  <p className="text-white/60 leading-relaxed text-sm sm:text-base">{feature.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
