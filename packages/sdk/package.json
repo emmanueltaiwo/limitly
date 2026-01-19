@@ -1,6 +1,6 @@
 {
   "name": "limitly-sdk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Official SDK for Limitly rate limiting service",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
