@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useRef } from "motion/react";
+import { useRef } from "react";
+import { motion } from "motion/react";
 import { ChevronRight, Sparkles, Lock, Shield } from "lucide-react";
 import { Button } from "@repo/ui/button";
 
