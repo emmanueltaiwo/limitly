@@ -9,14 +9,14 @@ description: Integrate rate limiting into your Next.js API routes. Works with bo
 
 ```typescript
 // app/api/route.ts
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
+const client = createClient({ serviceId: 'nextjs-api' });
 
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
@@ -30,11 +30,13 @@ export async function GET(request: Request) {
 
 ```typescript
 // lib/rate-limit.ts
-const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'nextjs-api' });
 
 export async function withRateLimit(request: Request, handler: Function) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
@@ -42,6 +44,7 @@ export async function withRateLimit(request: Request, handler: Function) {
   
   return handler(request);
 }
+```
 
 // Usage
 export async function GET(request: Request) {
@@ -119,13 +122,13 @@ export async function POST(request: Request) {
 
 ```typescript
 // pages/api/route.ts
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
+const client = createClient({ serviceId: 'nextjs-api' });
 
 export default async function handler(req, res) {
   const userId = req.headers['x-user-id'] || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return res.status(429).json({ error: 'Rate limit exceeded' });
@@ -139,14 +142,14 @@ export default async function handler(req, res) {
 
 ```typescript
 'use server';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import { headers } from 'next/headers';
 
-const checkLimit = rateLimit({ serviceId: 'server-actions' });
+const client = createClient({ serviceId: 'server-actions' });
 
 export async function protectedAction(data: FormData) {
   const userId = headers().get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) throw new Error('Rate limit exceeded');
   return { success: true };

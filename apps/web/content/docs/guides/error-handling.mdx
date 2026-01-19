@@ -67,7 +67,7 @@ Allow requests when rate limiting fails:
 ```typescript
 async function checkLimitSafely(userId: string) {
   try {
-    const result = await checkLimit(userId);
+    const result = await client.checkRateLimit(userId);
     return result;
   } catch (error) {
     // Log the error for monitoring
@@ -91,7 +91,7 @@ Reject requests when rate limiting fails:
 ```typescript
 async function checkLimitStrict(userId: string) {
   try {
-    const result = await checkLimit(userId);
+    const result = await client.checkRateLimit(userId);
     return result;
   } catch (error) {
     // Log the error
@@ -112,13 +112,17 @@ async function checkLimitStrict(userId: string) {
 Handle Redis connection failures:
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 async function handleRequest(userId: string) {
   try {
-    const result = await checkLimit(userId);
+    const result = await client.checkRateLimit(userId);
     return result;
   } catch (error) {
     if (error instanceof Error) {
@@ -182,7 +186,7 @@ async function checkLimitWithRetry(
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await checkLimit(userId);
+      const result = await client.checkRateLimit(userId);
       return result;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -230,7 +234,7 @@ class RateLimitCircuitBreaker {
     }
     
     try {
-      const result = await checkLimit(userId);
+      const result = await client.checkRateLimit(userId);
       
       // Success - reset failures
       if (this.state === 'half-open') {
@@ -263,13 +267,13 @@ const result = await circuitBreaker.check('user-123');
 Log errors for monitoring and alerting:
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+const client = createClient();
 
 async function checkLimitWithLogging(userId: string) {
   try {
-    const result = await checkLimit(userId);
+    const result = await client.checkRateLimit(userId);
     
     // Log rate limit violations
     if (!result.allowed) {
@@ -305,15 +309,15 @@ Return proper HTTP error responses:
 
 ```typescript
 // Next.js App Router
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const checkLimit = rateLimit();
+const client = createClient();
 
 export async function GET(request: Request) {
   try {
     const userId = request.headers.get('x-user-id') || 'anonymous';
-    const result = await checkLimit(userId);
+    const result = await client.checkRateLimit(userId);
     
     const headers = new Headers();
     if (result.limit) headers.set('X-RateLimit-Limit', result.limit.toString());

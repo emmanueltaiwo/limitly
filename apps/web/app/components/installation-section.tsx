@@ -35,10 +35,17 @@ export function InstallationSection() {
     {
       step: 2,
       title: "Create rate limiter",
-      description: "Initialize the rate limiting client",
-      code: `import { rateLimit } from 'limitly-sdk';
+      description: "Initialize the rate limiting client (recommended: use your own Redis)",
+      code: `import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();`,
+// Recommended: Use your own Redis for full tenant isolation
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
+// Without redisUrl (shares hosted Redis - may collide with other users)
+// const client = createClient({ serviceId: 'my-app' });`,
       language: "typescript",
       id: "init",
     },
@@ -49,7 +56,7 @@ const checkLimit = rateLimit();`,
       code: `// Next.js App Router example
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'unknown';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return Response.json(

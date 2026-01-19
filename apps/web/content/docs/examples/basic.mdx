@@ -9,13 +9,19 @@ Simple, practical examples for common use cases.
 
 ## Simple Rate Limiting
 
-```typescript
-import { rateLimit } from 'limitly-sdk';
+**Recommended: Use your own Redis**
 
-const checkLimit = rateLimit();
+```typescript
+import { createClient } from 'limitly-sdk';
+
+// Recommended for production
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 async function handleRequest(userId: string) {
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     throw new Error('Rate limit exceeded');
@@ -23,6 +29,13 @@ async function handleRequest(userId: string) {
   
   return { success: true, remaining: result.remaining };
 }
+```
+
+**Without Redis URL (development/testing):**
+
+```typescript
+// ⚠️ Shares hosted Redis - may collide with other users
+const client = createClient({ serviceId: 'my-app' });
 ```
 
 ## Response Structure
@@ -50,10 +63,15 @@ const result = await checkLimit({
 ## Per-User Limiting
 
 ```typescript
-const checkLimit = rateLimit({ serviceId: 'user-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'user-api'
+});
+```
 
 async function handleUserRequest(userId: string) {
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return { error: 'Rate limit exceeded' };
@@ -67,7 +85,7 @@ async function handleUserRequest(userId: string) {
 
 ```typescript
 const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-const result = await checkLimit(ip);
+const result = await client.checkRateLimit(ip);
 
 if (!result.allowed) {
   return Response.json({ error: 'Too many requests' }, { status: 429 });
@@ -82,7 +100,7 @@ const endpointLimits = {
   '/api/search': { capacity: 100, refillRate: 10 }
 };
 
-const result = await checkLimit({
+const result = await client.checkRateLimit({
   identifier: `${userId}:${endpoint}`,
   ...endpointLimits[endpoint]
 });
@@ -92,7 +110,7 @@ const result = await checkLimit({
 
 ```typescript
 try {
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   if (!result.allowed) {
     return { error: 'Rate limit exceeded' };
   }
@@ -120,6 +138,14 @@ if (!result.allowed) {
 ## Service Isolation
 
 ```typescript
-const apiLimiter = rateLimit({ serviceId: 'api-service' });
-const authLimiter = rateLimit({ serviceId: 'auth-service' });
+// Recommended: Use your own Redis for each service
+const apiClient = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'api-service'
+});
+
+const authClient = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'auth-service'
+});
 ```

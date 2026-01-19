@@ -20,10 +20,17 @@ npm install limitly-sdk
 
 ## Basic Usage
 
+**Recommended: Use your own Redis**
+
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Recommended for production: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
 const result = await client.checkRateLimit('user-123');
 
 if (result.allowed) {
@@ -31,21 +38,31 @@ if (result.allowed) {
 }
 ```
 
-## Configuration
-
-### Service Isolation
+**Without Redis URL (development/testing):**
 
 ```typescript
-const client = createClient({ serviceId: 'my-api-service' });
+// ⚠️ Shares hosted Redis - may collide with other users
+const client = createClient({ serviceId: 'my-app' });
 ```
 
-### Bring Your Own Redis
+## Configuration
+
+### Bring Your Own Redis (Recommended)
+
+**Always use your own Redis for production to avoid tenant collisions:**
 
 ```typescript
+// Recommended: Full tenant isolation
 const client = createClient({
-  redisUrl: 'redis://localhost:6379',
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   serviceId: 'my-app'
 });
+```
+
+**Without Redis URL:**
+```typescript
+// ⚠️ Shares hosted Redis - may collide with other users using same serviceId
+const client = createClient({ serviceId: 'my-api-service' });
 ```
 
 ## Framework Setup
@@ -55,7 +72,12 @@ const client = createClient({
 ```typescript
 // lib/rate-limit.ts
 import { createClient } from 'limitly-sdk';
-export const client = createClient({ serviceId: 'nextjs-api' });
+
+// Recommended: Use your own Redis
+export const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'nextjs-api'
+});
 
 // app/api/route.ts
 export async function GET(request: Request) {
@@ -74,7 +96,12 @@ export async function GET(request: Request) {
 ```typescript
 // middleware/rate-limit.ts
 import { createClient } from 'limitly-sdk';
-const client = createClient({ serviceId: 'express-api' });
+
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'express-api'
+});
 
 export async function rateLimitMiddleware(req, res, next) {
   const identifier = req.user?.id || req.ip || 'anonymous';

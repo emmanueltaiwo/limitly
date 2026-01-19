@@ -5,7 +5,7 @@ description: Creates a new Limitly client instance for advanced configurations a
 
 # createClient(config?)
 
-Creates a new Limitly client instance with custom configuration. Use this when you need more control over the client behavior, such as custom service IDs, timeouts, or Redis connections.
+Creates a new Limitly client instance with custom configuration. **For production, always provide `redisUrl` for full tenant isolation.**
 
 ## Function Signature
 
@@ -21,14 +21,16 @@ Configuration object for the client:
 
 ```typescript
 interface LimitlyConfig {
-  baseUrl?: string;        // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev)
+  redisUrl?: string;       // ⭐ Recommended for production. Redis connection URL for direct Redis mode
   serviceId?: string;      // Service identifier for isolation
   timeout?: number;        // Request timeout in milliseconds (default: 5000)
-  redisUrl?: string;       // Redis connection URL (optional, uses HTTP API if not provided)
+  baseUrl?: string;        // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when redisUrl is not provided.
 }
 ```
 
-**Note:** When `redisUrl` is provided, the SDK connects directly to your Redis. When not provided, it uses the HTTP API mode (hosted service).
+**Important:**
+- **With `redisUrl`**: SDK connects directly to your Redis. Full tenant isolation, no collisions with other users. **Recommended for production.**
+- **Without `redisUrl`**: Uses HTTP API mode (hosted service). Shares Redis with other users - may collide if multiple users use the same `serviceId`. Good for development/testing.
 
 ## Returns
 
@@ -39,12 +41,23 @@ A `LimitlyClient` instance with the following methods:
 
 ## Basic Usage
 
-Create a client with default settings:
+**Recommended: Use your own Redis**
 
 ```typescript
-import { createClient } } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Recommended for production
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+```
+
+**Without Redis URL (development/testing):**
+
+```typescript
+// ⚠️ Shares hosted Redis - may collide with other users
+const client = createClient({ serviceId: 'my-app' });
 ```
 
 ## Custom Service ID
@@ -52,7 +65,9 @@ const client = createClient();
 Isolate rate limits by service or application:
 
 ```typescript
+// Recommended: Use with your own Redis
 const client = createClient({
+  redisUrl: process.env.REDIS_URL,
   serviceId: 'my-api-service'
 });
 
@@ -80,29 +95,32 @@ await authClient.checkRateLimit({ identifier: 'user-123' });
 await jobClient.checkRateLimit({ identifier: 'user-123' });
 ```
 
-## Bring Your Own Redis
+## Bring Your Own Redis (Recommended for Production)
 
-Provide your own Redis URL for full tenant isolation:
+**Always use your own Redis URL for production deployments to ensure full tenant isolation:**
 
 ```typescript
+// Recommended for production
 const client = createClient({
-  redisUrl: 'redis://localhost:6379',
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   serviceId: 'my-app'
 });
 
-// All rate limit data stored in your Redis
+// All rate limit data stored in your Redis - no collisions
 const result = await client.checkRateLimit('user-123');
 ```
 
-When `redisUrl` is provided:
-- SDK connects directly to your Redis
-- Full tenant isolation (no collisions with other users)
-- No HTTP requests to the hosted service
-- All data stored in your Redis instance
+**Benefits of using your own Redis:**
+- ✅ **Full tenant isolation** - No collisions with other Limitly users
+- ✅ **Data privacy** - Your rate limit data stays in your Redis instance
+- ✅ **Better performance** - Direct Redis connection (no HTTP overhead)
+- ✅ **Production ready** - Recommended for all production deployments
 
-When `redisUrl` is not provided:
-- SDK uses HTTP API mode (hosted service)
-- Works out of the box with zero configuration
+**Without `redisUrl` (HTTP API mode):**
+- ⚠️ Shares hosted Redis with other users
+- ⚠️ Potential collisions if multiple users use the same `serviceId`
+- ✅ Works out of the box with zero configuration
+- ✅ Good for development and testing
 
 ## Custom Timeout
 
@@ -130,31 +148,24 @@ import { createClient } from 'limitly-sdk';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Use your own Redis in production
-export const limitlyClient = createClient({
-  serviceId: process.env.SERVICE_ID || 'default',
-  redisUrl: process.env.REDIS_URL, // Optional: uses HTTP API if not provided
+// Production: Always use your own Redis (recommended)
+export const prodClient = createClient({
+  redisUrl: process.env.REDIS_URL!, // Required for production
+  serviceId: process.env.SERVICE_ID || 'production',
   timeout: parseInt(process.env.TIMEOUT || '5000', 10)
 });
 
 // Development: use local Redis
 export const devClient = createClient({
-  serviceId: 'dev',
   redisUrl: 'redis://localhost:6379',
+  serviceId: 'dev',
   timeout: 5000
 });
 
-// Production: use your own Redis for isolation
-export const prodClient = createClient({
-  serviceId: process.env.SERVICE_ID || 'production',
-  redisUrl: process.env.REDIS_URL!, // Your Redis instance
-  timeout: 5000
-});
-
-// Or use HTTP API mode (no Redis needed)
+// ⚠️ Not recommended for production: HTTP API mode (shares hosted Redis)
 export const apiClient = createClient({
   serviceId: 'my-app'
-  // No redisUrl = uses HTTP API
+  // No redisUrl = uses HTTP API, may collide with other users
 });
 ```
 
@@ -227,9 +238,10 @@ let client: ReturnType<typeof createClient> | null = null;
 
 export function getLimitlyClient() {
   if (!client) {
+    // Recommended: Always provide redisUrl for production
     client = createClient({
-      serviceId: process.env.SERVICE_ID || 'default',
-      redisUrl: process.env.REDIS_URL // Optional: uses HTTP API if not provided
+      redisUrl: process.env.REDIS_URL, // Required for production
+      serviceId: process.env.SERVICE_ID || 'default'
     });
   }
   return client;

@@ -23,10 +23,16 @@ npm install limitly-sdk
 
 ## Quick Start
 
+**Recommended: Use your own Redis for full tenant isolation**
+
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Use your own Redis (recommended for production)
+const client = createClient({
+  redisUrl: 'redis://localhost:6379', // or your Redis URL
+  serviceId: 'my-app'
+});
 
 // Next.js App Router example
 export async function GET(request: Request) {
@@ -45,14 +51,51 @@ export async function GET(request: Request) {
 }
 ```
 
+**Without Redis URL (uses hosted service):**
+
+```typescript
+// ⚠️ Note: Without redisUrl, you share Redis with other users
+// If multiple users use the same serviceId, they may collide
+const client = createClient({ serviceId: 'my-app' });
+```
+
 ## Features
 
-### 1. Rate Limit Headers
+### 1. Bring Your Own Redis (Recommended)
+
+**Use your own Redis for full tenant isolation and production deployments.**
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
+// All rate limit data stored in your Redis - no collisions with other users
+const result = await client.checkRateLimit('user-123');
+```
+
+**Why use your own Redis?**
+- ✅ **Full tenant isolation** - No collisions with other Limitly users
+- ✅ **Data privacy** - Your rate limit data stays in your Redis
+- ✅ **Better performance** - Direct Redis connection (no HTTP overhead)
+- ✅ **Production ready** - Recommended for production deployments
+
+**Without `redisUrl` (HTTP API mode):**
+- ⚠️ Shares hosted Redis with other users
+- ⚠️ Potential collisions if multiple users use the same `serviceId`
+- ✅ Works out of the box with zero configuration
+- ✅ Good for development and testing
+
+### 2. Rate Limit Headers
 
 Get standard rate limit information in headers:
 
 ```typescript
-const result = await checkLimit('user-123');
+const result = await client.checkRateLimit('user-123');
 // result.limit - total limit
 // result.remaining - requests remaining
 // result.reset - timestamp when limit resets
@@ -65,7 +108,9 @@ Prevent cross-site collisions with service IDs:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
+// Recommended: Use with your own Redis
 const client = createClient({
+  redisUrl: process.env.REDIS_URL,
   serviceId: 'my-app-production'
 });
 
@@ -134,10 +179,26 @@ app.use(async (req, res, next) => {
 Creates a new Limitly client instance.
 
 **Config options:**
-- `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev)
+- `redisUrl` (string, optional): **Recommended for production.** Redis connection URL for direct Redis mode. If provided, SDK connects directly to your Redis for full tenant isolation. If not provided, uses HTTP API mode (shares hosted Redis with other users).
 - `serviceId` (string, optional): Isolate rate limits per service
+- `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when `redisUrl` is not provided.
 - `timeout` (number, optional): Request timeout in ms (default: 5000)
-- `redisUrl` (string, optional): Redis connection URL for direct Redis mode. If provided, SDK connects directly to your Redis. If not provided, uses HTTP API mode.
+
+**Example with Redis (recommended):**
+```typescript
+const client = createClient({
+  redisUrl: 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+```
+
+**Example without Redis (development/testing):**
+```typescript
+// ⚠️ Shares hosted Redis - may collide with other users
+const client = createClient({
+  serviceId: 'my-app'
+});
+```
 
 ### `client.checkRateLimit(options?: RateLimitOptions | string)`
 

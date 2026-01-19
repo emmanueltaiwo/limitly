@@ -15,7 +15,7 @@ Rate limiting controls traffic to prevent abuse, ensure fair usage, and maintain
 
 - **Zero Configuration**: Get started instantly with sensible defaults
 - **Redis-Backed**: Distributed rate limiting across multiple servers
-- **Bring Your Own Redis**: Optional Redis URL for full tenant isolation
+- **Bring Your Own Redis**: Recommended for production - full tenant isolation
 - **TypeScript First**: Full type safety and IDE autocomplete
 - **Flexible**: Customize limits per user, endpoint, or use case
 - **Production Ready**: Error handling, timeouts, and best practices built-in
@@ -23,12 +23,21 @@ Rate limiting controls traffic to prevent abuse, ensure fair usage, and maintain
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Recommended: Use your own Redis for production
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
 const result = await client.checkRateLimit('user-123');
 
 if (result.allowed) {
   console.log(`Remaining: ${result.remaining}`);
 }
+
+// Without redisUrl (development/testing only)
+// ⚠️ Shares hosted Redis - may collide with other users using same serviceId
+// const client = createClient({ serviceId: 'my-app' });
 ```
 
 ## Use Cases
@@ -48,6 +57,6 @@ Limitly uses the **Token Bucket Algorithm**:
 ## Getting Started
 
 1. Install: `npm install limitly-sdk`
-2. Use: `const client = createClient(); await client.checkRateLimit('user-123');`
+2. Use: `const client = createClient({ redisUrl: 'redis://localhost:6379' }); await client.checkRateLimit('user-123');`
 
 See [Installation](./installation) for setup or [Quick Start](./quick-start) for examples.

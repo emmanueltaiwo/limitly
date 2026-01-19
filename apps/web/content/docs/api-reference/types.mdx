@@ -66,12 +66,16 @@ interface LimitlyResponse {
 
 ```typescript
 import type { LimitlyResponse } from 'limitly-sdk';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 async function handleRequest(userId: string): Promise<LimitlyResponse> {
-  const result: LimitlyResponse = await checkLimit(userId);
+  const result: LimitlyResponse = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     console.log(`Rate limited. Reset at: ${new Date(result.reset!)}`);
@@ -220,7 +224,7 @@ Create generic helper functions with proper typing:
 
 ```typescript
 import type { LimitlyResponse } from 'limitly-sdk';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
 type RateLimitHandler<T> = (result: LimitlyResponse) => T;
 
@@ -229,11 +233,12 @@ async function withRateLimit<T>(
   onAllowed: RateLimitHandler<T>,
   onRateLimited: RateLimitHandler<T>
 ): Promise<T> {
-  const checkLimit = rateLimit();
-  const result = await checkLimit(identifier);
+  const client = createClient();
+  const result = await client.checkRateLimit(identifier);
   
   return result.allowed ? onAllowed(result) : onRateLimited(result);
 }
+```
 
 // Usage
 const response = await withRateLimit(

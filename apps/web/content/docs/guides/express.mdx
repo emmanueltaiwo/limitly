@@ -126,10 +126,10 @@ Handle rate limit errors gracefully:
 
 ```typescript
 // middleware/rate-limit.ts
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import type { Request, Response, NextFunction } from 'express';
 
-const checkLimit = rateLimit({ serviceId: 'express-api' });
+const client = createClient({ serviceId: 'express-api' });
 
 export async function rateLimitMiddleware(
   req: Request,
@@ -138,7 +138,7 @@ export async function rateLimitMiddleware(
 ) {
   try {
     const identifier = (req as any).user?.id || req.ip || 'anonymous';
-    const result = await checkLimit(identifier);
+    const result = await client.checkRateLimit(identifier);
     
     // Set headers
     if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());

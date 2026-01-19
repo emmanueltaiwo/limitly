@@ -17,19 +17,25 @@ Centralized rate-limiting service using Redis and token bucket algorithm. Built 
 
 Limitly supports two modes:
 
-**HTTP API Mode (default):**
-```
-User Application → limitly-sdk → HTTP → @limitly/core → Redis
-```
-
-**Direct Redis Mode (optional):**
+**Direct Redis Mode (recommended for production):**
 ```
 User Application → limitly-sdk → User's Redis
 ```
+- ✅ Full tenant isolation
+- ✅ No collisions with other users
+- ✅ Better performance (direct connection)
+
+**HTTP API Mode (development/testing):**
+```
+User Application → limitly-sdk → HTTP → @limitly/core → Shared Redis
+```
+- ⚠️ Shares Redis with other users
+- ⚠️ Potential collisions if multiple users use same serviceId
+- ✅ Works out of the box
 
 - **SDK** - Client library users install
 - **Core** - This service (hosted by Limitly, used when no redisUrl provided)
-- **Redis** - Stores rate limit state (can be user's own Redis or hosted)
+- **Redis** - Stores rate limit state (user's own Redis recommended for production)
 
 ## API Endpoints
 
@@ -118,7 +124,7 @@ Same IP, different limits per service.
 3. **Concurrent requests** - Atomic Lua scripts
 4. **Config changes** - Dynamic per-request configuration
 5. **Missing identifiers** - Falls back to IP address
-6. **Tenant isolation** - Users can provide their own Redis URL for full isolation
+6. **Tenant isolation** - Users should provide their own Redis URL for full isolation (recommended for production)
 
 ## Deployment
 

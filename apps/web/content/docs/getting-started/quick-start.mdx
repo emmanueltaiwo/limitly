@@ -9,10 +9,17 @@ Get started with Limitly in minutes.
 
 ## Basic Example
 
+**Recommended: Use your own Redis**
+
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Recommended for production: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
 const result = await client.checkRateLimit('user-123');
 
 if (result.allowed) {
@@ -20,6 +27,13 @@ if (result.allowed) {
 } else {
   console.log('Rate limit exceeded!');
 }
+```
+
+**Without Redis URL (development/testing):**
+
+```typescript
+// ⚠️ Shares hosted Redis - may collide with other users
+const client = createClient({ serviceId: 'my-app' });
 ```
 
 ## Next.js
@@ -31,7 +45,11 @@ if (result.allowed) {
 import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const client = createClient({ serviceId: 'nextjs-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'nextjs-api'
+});
 
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
@@ -144,16 +162,28 @@ const tierLimits = {
 await client.checkRateLimit({ identifier: user.id, ...tierLimits[user.plan] });
 ```
 
-## Bring Your Own Redis
+## Bring Your Own Redis (Recommended)
 
-For full tenant isolation, provide your own Redis URL:
+**For production deployments, always use your own Redis URL for full tenant isolation:**
 
 ```typescript
+// Recommended for production
 const client = createClient({
-  redisUrl: 'redis://localhost:6379',
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   serviceId: 'my-app'
 });
 
-// All rate limit data stored in your Redis
+// All rate limit data stored in your Redis - no collisions
 const result = await client.checkRateLimit('user-123');
 ```
+
+**Why use your own Redis?**
+- ✅ **Full tenant isolation** - No collisions with other Limitly users
+- ✅ **Data privacy** - Your rate limit data stays in your Redis
+- ✅ **Better performance** - Direct Redis connection (no HTTP overhead)
+- ✅ **Production ready** - Recommended for all production deployments
+
+**Without `redisUrl`:**
+- ⚠️ Shares hosted Redis with other users
+- ⚠️ Potential collisions if multiple users use the same `serviceId`
+- ✅ Works out of the box (good for development/testing)

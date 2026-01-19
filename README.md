@@ -23,10 +23,16 @@ Limitly is a centralized rate-limiting service using Redis and token bucket algo
 npm install limitly-sdk
 ```
 
+**Recommended: Use your own Redis for production**
+
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Use your own Redis (recommended for production)
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 async function handler(req, res) {
   const result = await client.checkRateLimit(req.userId || req.ip);
@@ -39,14 +45,19 @@ async function handler(req, res) {
 }
 ```
 
-**Or use your own Redis for full tenant isolation:**
+**Without Redis URL (development/testing):**
 
 ```typescript
-const client = createClient({
-  redisUrl: 'redis://localhost:6379',
-  serviceId: 'my-app'
-});
+// ⚠️ Note: Without redisUrl, you share the hosted Redis with other users
+// If multiple users use the same serviceId, they may experience collisions
+const client = createClient({ serviceId: 'my-app' });
 ```
+
+**Why bring your own Redis?**
+- ✅ Full tenant isolation (no collisions with other users)
+- ✅ Data privacy (your rate limit data stays in your Redis)
+- ✅ Better performance (direct connection, no HTTP overhead)
+- ✅ Production ready (recommended for production deployments)
 
 ## Project Structure
 
