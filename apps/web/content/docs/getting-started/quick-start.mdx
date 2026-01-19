@@ -1,0 +1,31 @@
+---
+title: Quick Start
+description: Get your first rate limiter up and running in just a few lines of code.
+---
+
+# Quick Start
+
+Get your first rate limiter up and running in just a few lines of code.
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+// Create a rate limiter function
+const checkLimit = rateLimit();
+
+// Use in your API handler (Next.js App Router example)
+export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'unknown';
+  const result = await checkLimit(userId);
+
+  if (!result.allowed) {
+    return Response.json(
+      { error: 'Too many requests' },
+      { status: 429 }
+    );
+  }
+
+  // Your route logic here
+  return Response.json({ success: true });
+}
+```

@@ -1,0 +1,22 @@
+---
+title: createClient()
+description: Creates a new Limitly client instance for more advanced configurations.
+---
+
+# createClient(config?)
+
+Creates a new Limitly client instance for more advanced configurations.
+
+## Configuration
+
+```typescript
+interface LimitlyConfig {
+  serviceId?: string;      // Service identifier for isolation
+  timeout?: number;        // Request timeout in milliseconds (default: 5000)
+}
+
+const client = createClient({
+  serviceId: 'my-app',
+  timeout: 5000
+});
+```

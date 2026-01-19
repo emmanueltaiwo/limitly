@@ -1,0 +1,29 @@
+---
+title: Advanced Configuration
+description: Advanced usage patterns with tiered rate limiting.
+---
+
+# Advanced Configuration
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({
+  serviceId: 'api-v2',
+  timeout: 3000
+});
+
+// Tiered rate limiting
+async function checkTieredLimit(req) {
+  const isPremium = req.user?.plan === 'premium';
+  
+  const result = await client.checkRateLimit({
+    identifier: req.user?.id || req.ip,
+    capacity: isPremium ? 1000 : 100,      // Premium has higher limit
+    refillRate: isPremium ? 100 : 10,      // Premium refills faster
+    skip: req.user?.isAdmin                // Admins bypass limits
+  });
+
+  return result;
+}
+```

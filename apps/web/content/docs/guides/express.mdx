@@ -1,0 +1,41 @@
+---
+title: Express.js Middleware
+description: Protect your Express routes with a simple middleware.
+---
+
+# Express.js Middleware
+
+Protect your Express routes with a simple middleware.
+
+```typescript
+import express from 'express';
+import { rateLimit } from 'limitly-sdk';
+
+const app = express();
+const checkLimit = rateLimit({ serviceId: 'my-api' });
+
+// Middleware approach
+app.use(async (req, res, next) => {
+  const result = await checkLimit({
+    identifier: req.user?.id || req.ip,
+    capacity: 100,
+    refillRate: 10
+  });
+
+  if (!result.allowed) {
+    const retryAfter = result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60;
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      retryAfter
+    });
+  }
+
+  next();
+});
+
+app.get('/api/data', (req, res) => {
+  res.json({ data: 'Your API response' });
+});
+```

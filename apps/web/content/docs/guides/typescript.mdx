@@ -1,0 +1,36 @@
+---
+title: TypeScript Support
+description: Limitly is fully typed with TypeScript. Get complete type safety and IDE autocomplete.
+---
+
+# TypeScript Support
+
+Limitly is fully typed with TypeScript. Get complete type safety and IDE autocomplete.
+
+```typescript
+import type { 
+  LimitlyConfig, 
+  LimitlyResponse, 
+  RateLimitOptions 
+} from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
+
+// Fully typed configuration
+const config: LimitlyConfig = {
+  serviceId: 'my-app',
+  timeout: 5000
+};
+
+const client = createClient(config);
+
+// Type-safe responses
+const result: LimitlyResponse = await client.checkRateLimit({
+  identifier: 'user-123',
+  capacity: 100,
+  refillRate: 10
+});
+
+if (result.allowed) {
+  console.log(`Remaining: ${result.remaining}`);
+}
+```

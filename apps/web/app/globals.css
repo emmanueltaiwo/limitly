@@ -1,8 +1,33 @@
 @import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 :root {
   --background: #000000;
   --foreground: #ffffff;
+  
+  /* Fumadocs official CSS variables */
+  --fd-sidebar-width: 240px;
+  --fd-nav-height: 80px;
+  
+  /* Custom theme variables */
+  --fd-content-background: #000000;
+  --fd-content-foreground: #ffffff;
+  
+  --fd-muted: rgba(255, 255, 255, 0.6);
+  --fd-muted-foreground: rgba(255, 255, 255, 0.8);
+  
+  --fd-border: rgba(255, 255, 255, 0.1);
+  --fd-ring: rgba(255, 255, 255, 0.2);
+  
+  --fd-code-background: #1a1a1a;
+  --fd-code-foreground: #e5e5e5;
+  --fd-code-border: rgba(255, 255, 255, 0.1);
+  
+  --fd-link: #60a5fa;
+  --fd-link-hover: #93c5fd;
+  
+  --fd-toc-border: rgba(255, 255, 255, 0.1);
 }
 
 @theme inline {
@@ -37,4 +62,377 @@ code {
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced Fumadocs sidebar styling */
+aside[data-sidebar],
+.fd-sidebar,
+[data-sidebar],
+nav[data-sidebar],
+aside {
+  background: #000000 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Sidebar width control */
+aside[data-sidebar],
+.fd-sidebar,
+[data-sidebar] {
+  width: var(--fd-sidebar-width) !important;
+  min-width: var(--fd-sidebar-width) !important;
+  max-width: var(--fd-sidebar-width) !important;
+}
+
+/* Sidebar links */
+aside[data-sidebar] a,
+.fd-sidebar a,
+[data-sidebar] a {
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.2s ease;
+}
+
+aside[data-sidebar] a:hover,
+.fd-sidebar a:hover,
+[data-sidebar] a:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Active sidebar item */
+aside[data-sidebar] a[data-active="true"],
+.fd-sidebar a[data-active="true"],
+[data-sidebar] a[data-active="true"],
+aside[data-sidebar] [data-active="true"],
+.fd-sidebar [data-active="true"],
+[data-sidebar] [data-active="true"] {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+/* Sidebar folders */
+aside[data-sidebar] [data-folder],
+.fd-sidebar [data-folder],
+[data-sidebar] [data-folder] {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+aside[data-sidebar] [data-folder] > button,
+.fd-sidebar [data-folder] > button,
+[data-sidebar] [data-folder] > button {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 600;
+}
+
+aside[data-sidebar] [data-folder][data-active="true"] > button,
+.fd-sidebar [data-folder][data-active="true"] > button,
+[data-sidebar] [data-folder][data-active="true"] > button {
+  color: #ffffff !important;
+}
+
+/* Sidebar scrollbar */
+aside[data-sidebar]::-webkit-scrollbar,
+.fd-sidebar::-webkit-scrollbar,
+[data-sidebar]::-webkit-scrollbar {
+  width: 8px;
+}
+
+aside[data-sidebar]::-webkit-scrollbar-track,
+.fd-sidebar::-webkit-scrollbar-track,
+[data-sidebar]::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+aside[data-sidebar]::-webkit-scrollbar-thumb,
+.fd-sidebar::-webkit-scrollbar-thumb,
+[data-sidebar]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+aside[data-sidebar]::-webkit-scrollbar-thumb:hover,
+.fd-sidebar::-webkit-scrollbar-thumb:hover,
+[data-sidebar]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme-toggle],
+.theme-toggle {
+  display: none !important;
+}
+
+/* Enhanced content area */
+[data-content] {
+  background: var(--fd-content-background) !important;
+  color: var(--fd-content-foreground) !important;
+}
+
+/* Better code blocks */
+[data-code-block] {
+  background: var(--fd-code-background) !important;
+  border: 1px solid var(--fd-code-border) !important;
+  border-radius: 8px;
+}
+
+/* Enhanced typography */
+[data-content] h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+[data-content] h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid var(--fd-border);
+  padding-bottom: 0.5rem;
+}
+
+[data-content] h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-content] p {
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-content] a {
+  color: var(--fd-link);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  border-bottom: 1px solid transparent;
+}
+
+[data-content] a:hover {
+  color: var(--fd-link-hover);
+  border-bottom-color: var(--fd-link-hover);
+}
+
+/* Enhanced table of contents */
+[data-toc] {
+  border-left: 1px solid var(--fd-toc-border) !important;
+}
+
+[data-toc] a {
+  color: var(--fd-muted) !important;
+  transition: color 0.2s ease;
+}
+
+[data-toc] a:hover,
+[data-toc] a[data-active="true"] {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Better code styling */
+[data-content] code {
+  background: var(--fd-code-background);
+  color: #a78bfa;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-weight: 500;
+  border: 1px solid var(--fd-code-border);
+}
+
+[data-content] pre {
+  background: var(--fd-code-background) !important;
+  border: 1px solid var(--fd-code-border) !important;
+  border-radius: 8px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+[data-content] pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--fd-code-foreground);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Enhanced lists */
+[data-content] ul,
+[data-content] ol {
+  margin: 1.25rem 0;
+  padding-left: 1.75rem;
+  line-height: 1.7;
+}
+
+[data-content] li {
+  margin: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-content] li::marker {
+  color: var(--fd-muted);
+}
+
+/* Better blockquotes */
+[data-content] blockquote {
+  border-left: 4px solid var(--fd-border);
+  margin: 1.5rem 0;
+  color: var(--fd-muted-foreground);
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1rem 1.5rem;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Enhanced tables */
+[data-content] table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  border: 1px solid var(--fd-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+[data-content] th {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--fd-border);
+}
+
+[data-content] td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--fd-border);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-content] tr:last-child td {
+  border-bottom: none;
+}
+
+[data-content] tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+
+/* Better spacing and layout */
+[data-content] {
+  padding: 2rem 0;
+}
+
+[data-content] > *:first-child {
+  margin-top: 0;
+}
+
+/* Enhanced callouts/alerts */
+[data-content] [data-callout] {
+  border-left: 4px solid var(--fd-link);
+  background: rgba(96, 165, 250, 0.1);
+  padding: 1rem 1.5rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
+}
+
+/* Better inline code in headings */
+[data-content] h1 code,
+[data-content] h2 code,
+[data-content] h3 code {
+  font-size: 0.85em;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Enhanced hr */
+[data-content] hr {
+  border: none;
+  border-top: 1px solid var(--fd-border);
+  margin: 2rem 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  [data-content] h1,
+  h1[data-title] {
+    font-size: 2rem;
+  }
+  
+  [data-content] h2 {
+    font-size: 1.5rem;
+  }
+  
+  [data-content] h3 {
+    font-size: 1.25rem;
+  }
+  
+  [data-content] pre {
+    padding: 1rem;
+    font-size: 0.8125rem;
+  }
+  
+  [data-content] {
+    padding: 1.5rem 0;
+  }
+  
+  [data-content] table {
+    font-size: 0.875rem;
+  }
+  
+  [data-content] th,
+  [data-content] td {
+    padding: 0.5rem 0.75rem;
+  }
 }

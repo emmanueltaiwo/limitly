@@ -1,0 +1,45 @@
+---
+title: Error Handling
+description: Gracefully handle rate limit errors in your application.
+---
+
+# Error Handling
+
+Gracefully handle rate limit errors in your application.
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+async function apiCall(req, res) {
+  try {
+    const result = await checkLimit(req.user?.id || req.ip);
+
+    if (!result.allowed) {
+      const retryAfter = result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60;
+      
+      res.setHeader('Retry-After', retryAfter.toString());
+      return res.status(429).json({
+        message: result.message || 'Rate limit exceeded',
+        retryAfter,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset
+      });
+    }
+
+    // Process request
+    return res.json({ success: true });
+  } catch (error) {
+    // Handle network errors
+    if (error instanceof Error) {
+      console.error('Rate limit check failed:', error.message);
+    }
+    // On error, allow request (graceful degradation)
+    return res.json({ success: true });
+  }
+}
+```

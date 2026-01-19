@@ -1,0 +1,23 @@
+---
+title: rateLimit()
+description: Quick helper function that returns a configured rate limiter. Perfect for simple use cases.
+---
+
+# rateLimit(config?)
+
+Quick helper function that returns a configured rate limiter. Perfect for simple use cases.
+
+## Function Signature
+
+```typescript
+function rateLimit(config?: LimitlyConfig | string): (options?: RateLimitOptions | string) => Promise<LimitlyResponse>
+```
+
+## Example
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+const result = await checkLimit('user-123');
+```

@@ -1,0 +1,41 @@
+---
+title: checkRateLimit()
+description: Checks if a request is allowed based on configured rate limits.
+---
+
+# client.checkRateLimit(options?)
+
+Checks if a request is allowed based on configured rate limits.
+
+## Options
+
+```typescript
+interface RateLimitOptions {
+  identifier?: string;     // User ID, IP, or other identifier
+  capacity?: number;       // Override default capacity
+  refillRate?: number;     // Tokens per second
+  skip?: boolean;          // Skip rate limiting
+}
+
+interface LimitlyResponse {
+  allowed: boolean;        // Is request allowed?
+  limit?: number;          // Total request limit
+  remaining?: number;      // Requests remaining
+  reset?: number;          // Unix timestamp (ms) when limit resets
+  message?: string;        // Error message if not allowed
+}
+```
+
+## Example
+
+```typescript
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  capacity: 100,
+  refillRate: 10
+});
+
+console.log(result.allowed);    // true or false
+console.log(result.remaining);  // e.g., 95
+console.log(result.reset);      // e.g., 1705000000000
+```

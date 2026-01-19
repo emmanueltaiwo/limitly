@@ -1,0 +1,44 @@
+---
+title: Next.js API Routes
+description: Integrate rate limiting into your Next.js API routes.
+---
+
+# Next.js API Routes
+
+Integrate rate limiting into your Next.js API routes.
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+const checkLimit = rateLimit();
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  // Get user identifier
+  const userId = (req.headers['x-user-id'] || req.socket.remoteAddress) as string;
+
+  // Check rate limit
+  const result = await checkLimit(userId);
+
+  if (!result.allowed) {
+    const retryAfter = result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60;
+    res.setHeader('Retry-After', retryAfter.toString());
+    return res.status(429).json({
+      error: 'Too many requests'
+    });
+  }
+
+  // Set rate limit headers (optional - SDK handles this)
+  if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
+  if (result.remaining !== undefined) res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
+  if (result.reset) res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
+
+  // Your API logic
+  res.status(200).json({ success: true });
+}
+```

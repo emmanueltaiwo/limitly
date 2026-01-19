@@ -1,0 +1,58 @@
+---
+title: Custom Rate Limit Strategies
+description: Implement custom rate limiting strategies for different use cases.
+---
+
+# Custom Rate Limit Strategies
+
+## Strategy 1: Per-endpoint limits
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient();
+
+async function protectEndpoint(endpoint, req) {
+  const limits: Record<string, { capacity: number; refillRate: number }> = {
+    '/api/login': { capacity: 5, refillRate: 0.1 },      // 5 attempts, refill 1 per 10 seconds
+    '/api/data': { capacity: 100, refillRate: 10 },      // 100 requests, refill 10 per second
+    '/api/export': { capacity: 10, refillRate: 0.5 }     // 10 requests, refill 0.5 per second
+  };
+
+  const limit = limits[endpoint] || { capacity: 100, refillRate: 10 };
+  
+  return await client.checkRateLimit({
+    identifier: req.user?.id || req.ip,
+    ...limit
+  });
+}
+```
+
+## Strategy 2: Adaptive limits based on load
+
+```typescript
+async function adaptiveLimit(req) {
+  const systemLoad = await getSystemLoad();  // Your monitoring
+  
+  return await client.checkRateLimit({
+    identifier: req.user?.id || req.ip,
+    capacity: systemLoad > 80 ? 50 : 100,
+    refillRate: systemLoad > 80 ? 5 : 10
+  });
+}
+```
+
+## Strategy 3: User tier-based limits
+
+```typescript
+async function tierBasedLimit(req) {
+  const isPremium = req.user?.plan === 'premium';
+  
+  return await client.checkRateLimit({
+    identifier: req.user?.id || req.ip,
+    capacity: isPremium ? 1000 : 100,
+    refillRate: isPremium ? 100 : 10,
+    skip: req.user?.isAdmin || false
+  });
+}
+```

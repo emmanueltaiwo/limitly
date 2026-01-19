@@ -1,0 +1,23 @@
+---
+title: Basic Usage
+description: Simple example of using Limitly in your application.
+---
+
+# Basic Usage
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+// In your handler
+const result = await checkLimit('user-123');
+
+if (result.allowed) {
+  // Process request
+  console.log(`Remaining: ${result.remaining}`);
+} else {
+  // Handle rate limit
+  console.log('Rate limited!');
+}
+```

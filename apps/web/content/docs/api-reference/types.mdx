@@ -1,0 +1,39 @@
+---
+title: Type Exports
+description: All types are exported for use in your own code.
+---
+
+# Type Exports
+
+All types are exported for use in your own code.
+
+```typescript
+import type {
+  LimitlyConfig,
+  LimitlyResponse,
+  RateLimitOptions,
+  RateLimitInfo,
+  HealthResponse
+} from 'limitly-sdk';
+
+// Use in your function signatures
+function handleRateLimit(result: LimitlyResponse): void {
+  if (!result.allowed) {
+    const retryAfter = result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60;
+    console.log(`Rate limited. Retry after ${retryAfter}s`);
+  }
+}
+
+// Create typed wrappers
+async function protectedRoute(
+  userId: string,
+  options?: RateLimitOptions
+): Promise<LimitlyResponse> {
+  return client.checkRateLimit({
+    identifier: userId,
+    ...options
+  });
+}
+```
