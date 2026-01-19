@@ -1,3 +1,6 @@
+import { RedisClient } from './redis-client.js';
+import { RateLimiter } from './rate-limiter.js';
+
 /**
  * limitly-sdk
  * Type-safe rate limiting SDK for Node.js and browsers
@@ -13,6 +16,8 @@ export interface LimitlyConfig {
   serviceId?: string;
   /** Request timeout in milliseconds (default: 5000) */
   timeout?: number;
+  /** Redis URL for direct Redis connection (optional, uses HTTP API if not provided) */
+  redisUrl?: string;
 }
 
 /**
@@ -78,11 +83,23 @@ export class LimitlyClient {
   private readonly baseUrl: string;
   private readonly defaultServiceId?: string;
   private readonly timeout: number;
+  private readonly useRedis: boolean;
+  private readonly redisClient?: RedisClient;
+  private readonly rateLimiter?: RateLimiter;
 
   constructor(config: LimitlyConfig = {}) {
     this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
     this.timeout = config.timeout ?? 5000;
+    
+    if (config.redisUrl) {
+      this.useRedis = true;
+      this.redisClient = new RedisClient(config.redisUrl);
+      this.rateLimiter = new RateLimiter(this.redisClient, 100, 10);
+      this.redisClient.connect().catch(() => {});
+    } else {
+      this.useRedis = false;
+    }
   }
 
   private async request(
@@ -127,21 +144,55 @@ export class LimitlyClient {
   async checkRateLimit(
     options?: RateLimitOptions | string
   ): Promise<LimitlyResponse> {
-    try {
-      const opts: RateLimitOptions =
-        options === undefined || typeof options === 'string'
-          ? { identifier: options }
-          : options;
+    const opts: RateLimitOptions =
+      options === undefined || typeof options === 'string'
+        ? { identifier: options }
+        : options;
 
-      if (opts.skip === true) {
+    if (opts.skip === true) {
+      return {
+        allowed: true,
+        limit: 0,
+        remaining: 0,
+        reset: 0,
+      } as const;
+    }
+
+    if (this.useRedis && this.rateLimiter) {
+      try {
+        const serviceId = opts.serviceId ?? this.defaultServiceId ?? 'default';
+        const clientId = opts.identifier ?? 'unknown';
+        const config = 
+          typeof opts.capacity === 'number' || typeof opts.refillRate === 'number'
+            ? { capacity: opts.capacity, refillRate: opts.refillRate }
+            : undefined;
+
+        const result = await this.rateLimiter.check(serviceId, clientId, config);
+
+        if (!result.allowed) {
+          return {
+            allowed: false,
+            message: 'Too many requests',
+            limit: result.limit,
+            remaining: result.remaining,
+            reset: result.reset,
+          } as LimitlyResponse;
+        }
+
         return {
           allowed: true,
-          limit: 0,
-          remaining: 0,
-          reset: 0,
-        } as const;
+          limit: result.limit,
+          remaining: result.remaining,
+          reset: result.reset,
+        } as LimitlyResponse;
+      } catch {
+        return {
+          allowed: true,
+        } as LimitlyResponse;
       }
+    }
 
+    try {
       const headers: Record<string, string> = {};
 
       if (opts.identifier) {
@@ -231,6 +282,13 @@ export class LimitlyClient {
    * ```
    */
   async health(): Promise<HealthResponse> {
+    if (this.useRedis && this.redisClient) {
+      return {
+        status: this.redisClient.isConnected ? 'ok' : 'error',
+        redis: this.redisClient.isConnected ? 'connected' : 'disconnected',
+      };
+    }
+
     try {
       const response = await this.request('/api/health', {
         method: 'GET',
@@ -265,27 +323,5 @@ export function createClient(config?: LimitlyConfig): LimitlyClient {
   return new LimitlyClient(config);
 }
 
-/**
- * Create a rate limit checker function
- * 
- * @param config - Optional client configuration or service ID string
- * @returns Async function to check rate limits
- * 
- * @example
- * ```typescript
- * const checkLimit = rateLimit({ serviceId: 'my-app' });
- * const result = await checkLimit('user-123');
- * ```
- */
-export function rateLimit(
-  config?: LimitlyConfig | string
-): (options?: RateLimitOptions | string) => Promise<LimitlyResponse> {
-  const client = createClient(
-    typeof config === 'string' ? { serviceId: config } : config
-  );
-  return async (options?: RateLimitOptions | string) => {
-    return await client.checkRateLimit(options);
-  };
-}
 
 export default LimitlyClient;

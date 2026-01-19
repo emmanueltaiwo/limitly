@@ -1,6 +1,6 @@
 {
   "name": "limitly-sdk",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Official SDK for Limitly rate limiting service",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,6 +22,9 @@
   "author": "Emmanuel Taiwo",
   "license": "ISC",
   "type": "module",
+  "dependencies": {
+    "redis": "^5.10.0"
+  },
   "devDependencies": {
     "@types/node": "^25.0.9",
     "typescript": "^5.9.3"
