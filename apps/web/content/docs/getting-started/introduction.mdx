@@ -5,181 +5,55 @@ description: Everything you need to know about Limitly. A TypeScript-first rate 
 
 # Introduction to Limitly
 
-Limitly is a **TypeScript-first rate limiting SDK** designed for modern Node.js applications and browsers. Built with simplicity and performance in mind, Limitly provides Redis-backed distributed rate limiting with zero configuration needed.
+Limitly is a **TypeScript-first rate limiting SDK** for Node.js and browsers. Redis-backed distributed rate limiting with zero configuration.
 
 ## What is Rate Limiting?
 
-Rate limiting is a technique used to control the amount of traffic sent or received by a network interface controller. It helps prevent abuse, ensures fair usage, and maintains service availability for all users.
-
-### Why You Need Rate Limiting
-
-- **Prevent Abuse**: Protect your APIs from malicious attacks and excessive usage
-- **Ensure Fair Usage**: Distribute resources evenly among all users
-- **Maintain Service Quality**: Prevent any single user from overwhelming your system
-- **Cost Control**: Manage infrastructure costs by limiting resource consumption
-- **Compliance**: Meet API usage requirements and quotas
+Rate limiting controls traffic to prevent abuse, ensure fair usage, and maintain service availability.
 
 ## Key Features
 
-### 🚀 Zero Configuration
-
-Get started in seconds with sensible defaults. No complex setup required.
+- **Zero Configuration**: Get started instantly with sensible defaults
+- **Redis-Backed**: Distributed rate limiting across multiple servers
+- **TypeScript First**: Full type safety and IDE autocomplete
+- **Flexible**: Customize limits per user, endpoint, or use case
+- **Production Ready**: Error handling, timeouts, and best practices built-in
 
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 const result = await checkLimit('user-123');
-```
-
-### ⚡ Redis-Backed & Distributed
-
-Built on Redis for high-performance, distributed rate limiting that works across multiple servers and instances.
-
-- **Distributed**: Works seamlessly across multiple server instances
-- **Fast**: Redis provides sub-millisecond latency
-- **Reliable**: Persistent rate limit state across restarts
-- **Scalable**: Handles millions of requests per second
-
-### 📦 TypeScript First
-
-Full TypeScript support with comprehensive type definitions out of the box.
-
-```typescript
-import { rateLimit, type LimitlyResponse } from 'limitly-sdk';
-
-const checkLimit = rateLimit();
-const result: LimitlyResponse = await checkLimit('user-123');
 
 if (result.allowed) {
   console.log(`Remaining: ${result.remaining}`);
 }
 ```
 
-### 🎯 Flexible & Customizable
-
-Configure rate limits per user, endpoint, or use case with granular control.
-
-```typescript
-const result = await checkLimit({
-  identifier: 'user-123',
-  capacity: 100,      // Maximum requests
-  refillRate: 10,     // Requests per second
-  window: 60000       // Time window in milliseconds
-});
-```
-
-### 🔒 Production Ready
-
-Built for production with error handling, timeouts, and best practices built-in.
-
-- Automatic retry logic
-- Configurable timeouts
-- Graceful error handling
-- Service isolation support
-
 ## Use Cases
 
-### API Protection
-
-Protect your REST or GraphQL APIs from abuse and ensure fair usage.
-
-```typescript
-// Next.js API Route example
-export async function GET(request: Request) {
-  const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
-  
-  if (!result.allowed) {
-    return Response.json(
-      { error: 'Rate limit exceeded' },
-      { status: 429 }
-    );
-  }
-  
-  return Response.json({ data: 'Your API response' });
-}
-```
-
-### User-Based Rate Limiting
-
-Implement different rate limits for different user tiers (free, premium, enterprise).
-
-```typescript
-const client = createClient({ serviceId: 'my-api' });
-
-async function checkUserLimit(user: User) {
-  const isPremium = user.plan === 'premium';
-  
-  return await client.checkRateLimit({
-    identifier: user.id,
-    capacity: isPremium ? 1000 : 100,
-    refillRate: isPremium ? 100 : 10
-  });
-}
-```
-
-### Endpoint-Specific Limits
-
-Apply different rate limits to different endpoints based on their resource requirements.
-
-```typescript
-// Heavy operation - lower limit
-const heavyCheck = rateLimit({ serviceId: 'heavy-ops' });
-await heavyCheck({ identifier: userId, capacity: 10, refillRate: 1 });
-
-// Light operation - higher limit
-const lightCheck = rateLimit({ serviceId: 'light-ops' });
-await lightCheck({ identifier: userId, capacity: 1000, refillRate: 100 });
-```
-
-### Bot Protection
-
-Prevent automated bots from overwhelming your services.
-
-```typescript
-const botCheck = rateLimit({ serviceId: 'bot-protection' });
-
-async function isBot(ip: string) {
-  const result = await botCheck({
-    identifier: ip,
-    capacity: 5,      // Very low limit for suspicious IPs
-    refillRate: 1
-  });
-  
-  return !result.allowed;
-}
-```
+- **API Protection**: Protect REST/GraphQL APIs from abuse
+- **User Tiers**: Different limits for free/premium/enterprise users
+- **Endpoint Limits**: Custom limits per endpoint based on resource usage
+- **Bot Protection**: Prevent automated attacks with strict IP-based limits
 
 ## How It Works
 
-Limitly uses the **Token Bucket Algorithm** under the hood, which provides smooth rate limiting behavior:
-
-1. **Bucket**: Each identifier gets a "bucket" with a maximum capacity
-2. **Tokens**: Requests consume tokens from the bucket
-3. **Refill**: Tokens are refilled at a constant rate
-4. **Check**: If tokens are available, the request is allowed; otherwise, it's rate limited
-
-This approach provides:
-- **Smooth traffic**: No sudden cutoffs
-- **Burst handling**: Allows short bursts up to capacity
-- **Fair distribution**: Consistent refill rate for all users
+Limitly uses the **Token Bucket Algorithm**:
+- Each identifier gets a bucket with maximum capacity
+- Requests consume tokens; tokens refill at a constant rate
+- Allows smooth traffic with burst handling
 
 ## Getting Started
 
-Ready to get started? Follow these steps:
+1. Install: `npm install limitly-sdk`
+2. Use: `const checkLimit = rateLimit(); await checkLimit('user-123');`
 
-1. **Install Limitly**:** `npm install limitly-sdk`
-2. **Set up Redis**: Ensure Redis is running (local or cloud)
-3. **Create a rate limiter**: Use the simple `rateLimit()` function
-4. **Protect your endpoints**: Add rate limit checks to your API routes
-
-Check out the [Installation Guide](./installation) for detailed setup instructions, or jump to [Quick Start](./quick-start) to see it in action.
+See [Installation](./installation) for setup or [Quick Start](./quick-start) for examples.
 
 ## Next Steps
 
-- 📦 [Installation](./installation) - Get Limitly set up in your project
-- ⚡ [Quick Start](./quick-start) - See Limitly in action with real examples
-- 📚 [Examples](../examples/basic) - Explore common use cases
-- 🔧 [API Reference](../api-reference/createclient) - Deep dive into the API
-- 🎓 [Guides](../guides/express) - Framework-specific integration guides
+- [Installation](./installation) - Setup instructions
+- [Quick Start](./quick-start) - Get started quickly
+- [Examples](../examples/basic) - Common use cases
+- [API Reference](../api-reference/createclient) - Full API docs

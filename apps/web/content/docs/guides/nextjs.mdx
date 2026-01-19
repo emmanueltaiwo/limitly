@@ -5,137 +5,53 @@ description: Integrate rate limiting into your Next.js API routes. Works with bo
 
 # Next.js Integration
 
-Learn how to integrate Limitly into your Next.js application. This guide covers both the App Router (Next.js 13+) and Pages Router.
-
-## App Router (Next.js 13+)
-
-### Basic API Route Protection
-
-Protect your API routes in the App Router:
+## App Router
 
 ```typescript
-// app/api/protected/route.ts
+// app/api/route.ts
 import { rateLimit } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
 const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
 
 export async function GET(request: Request) {
-  // Get user identifier from headers or IP
-  const userId = request.headers.get('x-user-id') || 
-                 request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                 'anonymous';
-  
-  // Check rate limit
+  const userId = request.headers.get('x-user-id') || 'anonymous';
   const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    
-    return NextResponse.json(
-      { 
-        error: 'Too many requests',
-        retryAfter 
-      },
-      { 
-        status: 429,
-        headers: {
-          'Retry-After': retryAfter.toString(),
-          'X-RateLimit-Limit': result.limit?.toString() || '100',
-          'X-RateLimit-Remaining': result.remaining?.toString() || '0',
-          'X-RateLimit-Reset': result.reset ? Math.ceil(result.reset / 1000).toString() : ''
-        }
-      }
-    );
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
   
-  // Your API logic here
-  return NextResponse.json({ 
-    success: true,
-    data: 'Your protected data',
-    rateLimit: {
-      remaining: result.remaining,
-      limit: result.limit
-    }
-  });
+  return NextResponse.json({ success: true });
 }
 ```
 
-### Reusable Rate Limit Helper
-
-Create a shared helper for consistent rate limiting:
+## Reusable Helper
 
 ```typescript
 // lib/rate-limit.ts
-import { rateLimit } from 'limitly-sdk';
-import { NextResponse } from 'next/server';
-
 const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
 
-export async function withRateLimit(
-  request: Request,
-  handler: (request: Request) => Promise<NextResponse>
-): Promise<NextResponse> {
-  // Extract identifier
-  const userId = request.headers.get('x-user-id') || 
-                 request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                 'anonymous';
-  
-  // Check rate limit
+export async function withRateLimit(request: Request, handler: Function) {
+  const userId = request.headers.get('x-user-id') || 'anonymous';
   const result = await checkLimit(userId);
   
-  // Set rate limit headers
-  const headers = new Headers();
-  if (result.limit) headers.set('X-RateLimit-Limit', result.limit.toString());
-  if (result.remaining !== undefined) {
-    headers.set('X-RateLimit-Remaining', result.remaining.toString());
-  }
-  if (result.reset) {
-    headers.set('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
-  }
-  
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    headers.set('Retry-After', retryAfter.toString());
-    
-    return NextResponse.json(
-      { error: 'Rate limit exceeded', retryAfter },
-      { status: 429, headers }
-    );
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
   
-  // Call handler and merge headers
-  const response = await handler(request);
-  headers.forEach((value, key) => {
-    response.headers.set(key, value);
-  });
-  
-  return response;
+  return handler(request);
 }
-```
 
-Use the helper:
-
-```typescript
-// app/api/data/route.ts
-import { withRateLimit } from '@/lib/rate-limit';
-import { NextResponse } from 'next/server';
-
+// Usage
 export async function GET(request: Request) {
-  return withRateLimit(request, async (req) => {
-    // Your API logic
+  return withRateLimit(request, async () => {
     return NextResponse.json({ data: 'Protected data' });
   });
 }
 ```
 
-### Per-Route Rate Limits
-
-Apply different limits to different routes:
+## Per-Route Limits
 
 ```typescript
 // lib/rate-limit.ts
@@ -199,197 +115,52 @@ export async function POST(request: Request) {
 }
 ```
 
-## Pages Router (Legacy)
-
-### API Route Protection
-
-Protect API routes in the Pages Router:
+## Pages Router
 
 ```typescript
-// pages/api/protected.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
+// pages/api/route.ts
 import { rateLimit } from 'limitly-sdk';
 
-const checkLimit = rateLimit({ serviceId: 'nextjs-pages-api' });
+const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  // Get user identifier
-  const userId = req.headers['x-user-id'] as string || 
-                 req.socket.remoteAddress || 
-                 'anonymous';
-  
-  // Check rate limit
+export default async function handler(req, res) {
+  const userId = req.headers['x-user-id'] || 'anonymous';
   const result = await checkLimit(userId);
   
-  // Set rate limit headers
-  if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
-  if (result.remaining !== undefined) {
-    res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
-  }
-  if (result.reset) {
-    res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
-  }
-  
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    
-    res.setHeader('Retry-After', retryAfter.toString());
-    return res.status(429).json({
-      error: 'Too many requests',
-      retryAfter
-    });
+    return res.status(429).json({ error: 'Rate limit exceeded' });
   }
   
-  // Your API logic
-  res.status(200).json({ 
-    success: true,
-    data: 'Your protected data'
-  });
+  res.status(200).json({ success: true });
 }
 ```
 
-### Reusable Middleware
-
-Create reusable middleware for Pages Router:
+## Server Actions
 
 ```typescript
-// lib/api-middleware.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { rateLimit } from 'limitly-sdk';
-
-const checkLimit = rateLimit({ serviceId: 'nextjs-pages-api' });
-
-export function withRateLimit(
-  handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
-) {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
-    try {
-      const userId = req.headers['x-user-id'] as string || 
-                     req.socket.remoteAddress || 
-                     'anonymous';
-      
-      const result = await checkLimit(userId);
-      
-      // Set headers
-      if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
-      if (result.remaining !== undefined) {
-        res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
-      }
-      if (result.reset) {
-        res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
-      }
-      
-      if (!result.allowed) {
-        const retryAfter = result.reset 
-          ? Math.ceil((result.reset - Date.now()) / 1000) 
-          : 60;
-        res.setHeader('Retry-After', retryAfter.toString());
-        return res.status(429).json({
-          error: 'Rate limit exceeded',
-          retryAfter
-        });
-      }
-      
-      // Call handler
-      await handler(req, res);
-    } catch (error) {
-      console.error('Rate limit error:', error);
-      // Fail open
-      await handler(req, res);
-    }
-  };
-}
-```
-
-Use the middleware:
-
-```typescript
-// pages/api/data.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { withRateLimit } from '@/lib/api-middleware';
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  res.status(200).json({ data: 'Protected data' });
-}
-
-export default withRateLimit(handler);
-```
-
-## Server Actions (App Router)
-
-Protect Server Actions with rate limiting:
-
-```typescript
-// app/actions.ts
 'use server';
-
 import { rateLimit } from 'limitly-sdk';
 import { headers } from 'next/headers';
 
 const checkLimit = rateLimit({ serviceId: 'server-actions' });
 
 export async function protectedAction(data: FormData) {
-  // Get user identifier from headers
-  const headersList = headers();
-  const userId = headersList.get('x-user-id') || 'anonymous';
-  
-  // Check rate limit
+  const userId = headers().get('x-user-id') || 'anonymous';
   const result = await checkLimit(userId);
   
-  if (!result.allowed) {
-    throw new Error('Rate limit exceeded');
-  }
-  
-  // Your action logic
+  if (!result.allowed) throw new Error('Rate limit exceeded');
   return { success: true };
-}
-```
-
-## Edge Runtime
-
-For Edge Runtime compatibility, ensure Redis connection works:
-
-```typescript
-// app/api/edge/route.ts
-import { rateLimit } from 'limitly-sdk';
-
-export const runtime = 'edge';
-
-const checkLimit = rateLimit({ 
-  serviceId: 'edge-api',
-  redisUrl: process.env.REDIS_URL!
-});
-
-export async function GET(request: Request) {
-  const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
-  
-  if (!result.allowed) {
-    return Response.json(
-      { error: 'Rate limit exceeded' },
-      { status: 429 }
-    );
-  }
-  
-  return Response.json({ success: true });
 }
 ```
 
 ## Best Practices
 
-1. **Environment Variables**: Use environment variables for Redis URL
-2. **Error Handling**: Always handle rate limit errors gracefully
-3. **Headers**: Set proper rate limit headers for client awareness
-4. **User Identification**: Use authenticated user IDs when available
-5. **Different Limits**: Apply different limits to different routes
+- Use environment variables for configuration
+- Handle errors gracefully
+- Use authenticated user IDs when available
 
 ## Next Steps
 
-- 📚 [Basic Examples](../examples/basic) - More usage patterns
-- 🚀 [Advanced Examples](../examples/advanced) - Complex scenarios
-- 🔧 [API Reference](../api-reference/ratelimit) - Complete API docs
+- [Basic Examples](../examples/basic) - More patterns
+- [Advanced Examples](../examples/advanced) - Complex scenarios
+- [API Reference](../api-reference/ratelimit) - Full docs

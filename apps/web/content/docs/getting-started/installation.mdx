@@ -5,104 +5,41 @@ description: Get started with Limitly in seconds. Install the SDK and you're rea
 
 # Installation
 
-Get Limitly up and running in your project in just a few minutes. Limitly is a free, hosted rate limiting service - no API keys, no Redis setup, just install and use.
+Install Limitly in seconds. No API keys or Redis setup required.
 
 ## Prerequisites
 
-Before installing Limitly, make sure you have:
+- Node.js 14+
+- npm
 
-- **Node.js** 14 or higher
-- **npm** package manager
-
-## Step 1: Install the Package
-
-Install Limitly using npm:
+## Install
 
 ```bash
 npm install limitly-sdk
 ```
 
-That's it! No API keys, no configuration files, no Redis setup required.
-
-## Step 2: Verify Installation
-
-Create a simple test file to verify everything works:
-
-```typescript
-// test-limitly.ts
-import { rateLimit } from 'limitly-sdk';
-
-async function test() {
-  // Create a rate limiter - works out of the box!
-  const checkLimit = rateLimit();
-  
-  // Test rate limiting
-  const result = await checkLimit('test-user');
-  
-  console.log('Rate limit result:', result);
-  console.log('Allowed:', result.allowed);
-  console.log('Remaining:', result.remaining);
-}
-
-test().catch(console.error);
-```
-
-Run the test:
-
-```bash
-npx tsx test-limitly.ts
-# or
-node --loader ts-node/esm test-limitly.ts
-```
-
-You should see output like:
-
-```
-Rate limit result: { allowed: true, remaining: 99, limit: 100, reset: 1234567890 }
-Allowed: true
-Remaining: 99
-```
-
 ## Basic Usage
 
-The simplest setup uses default values - no configuration needed:
-
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
-// Works out of the box - connects to Limitly's hosted service
 const checkLimit = rateLimit();
-
-// Check rate limit
 const result = await checkLimit('user-123');
 
 if (result.allowed) {
-  console.log(`Request allowed. ${result.remaining} remaining.`);
-} else {
-  console.log('Rate limited!');
+  console.log(`Allowed. ${result.remaining} remaining.`);
 }
 ```
 
-## Optional Configuration
-
-While Limitly works with zero configuration, you can optionally customize it:
+## Configuration
 
 ### Service Isolation
 
-Isolate rate limits by service to prevent collisions across different applications:
-
 ```typescript
-import { rateLimit } from 'limitly-sdk';
-
-// Each service gets its own rate limit buckets
-const checkLimit = rateLimit({
-  serviceId: 'my-api-service'
-});
+const checkLimit = rateLimit({ serviceId: 'my-api-service' });
 ```
 
 ### Custom Base URL
-
-If you're self-hosting the Limitly API service:
 
 ```typescript
 import { createClient } from 'limitly-sdk';
@@ -110,161 +47,57 @@ import { createClient } from 'limitly-sdk';
 const client = createClient({
   baseUrl: 'https://your-limitly-instance.com',
   serviceId: 'my-app',
-  timeout: 5000  // Request timeout in milliseconds
+  timeout: 5000
 });
 ```
 
-### Multiple Services
-
-Create different clients for different services:
-
-```typescript
-import { createClient } from 'limitly-sdk';
-
-// API service
-const apiClient = createClient({
-  serviceId: 'api-service'
-});
-
-// Authentication service
-const authClient = createClient({
-  serviceId: 'auth-service'
-});
-
-// Each service has independent rate limit buckets
-await apiClient.checkRateLimit({ identifier: 'user-123' });
-await authClient.checkRateLimit({ identifier: 'user-123' });
-```
-
-## Framework-Specific Setup
+## Framework Setup
 
 ### Next.js
-
-Create a shared rate limiter:
 
 ```typescript
 // lib/rate-limit.ts
 import { rateLimit } from 'limitly-sdk';
+export const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
 
-export const checkLimit = rateLimit({
-  serviceId: 'nextjs-api'
-});
-```
-
-Use in API routes:
-
-```typescript
-// app/api/example/route.ts
-import { checkLimit } from '@/lib/rate-limit';
-
+// app/api/route.ts
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
   const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    return Response.json(
-      { error: 'Rate limit exceeded' },
-      { status: 429 }
-    );
+    return Response.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
-  
   return Response.json({ success: true });
 }
 ```
 
 ### Express.js
 
-Create middleware:
-
 ```typescript
 // middleware/rate-limit.ts
 import { rateLimit } from 'limitly-sdk';
-import type { Request, Response, NextFunction } from 'express';
+const checkLimit = rateLimit({ serviceId: 'express-api' });
 
-const checkLimit = rateLimit({
-  serviceId: 'express-api'
-});
-
-export async function rateLimitMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const identifier = (req as any).user?.id || req.ip || 'anonymous';
+export async function rateLimitMiddleware(req, res, next) {
+  const identifier = req.user?.id || req.ip || 'anonymous';
   const result = await checkLimit(identifier);
   
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    
-    res.setHeader('Retry-After', retryAfter.toString());
-    return res.status(429).json({
-      error: 'Rate limit exceeded',
-      retryAfter
-    });
+    return res.status(429).json({ error: 'Rate limit exceeded' });
   }
-  
   next();
 }
 ```
 
-Apply to routes:
-
-```typescript
-// app.ts
-import express from 'express';
-import { rateLimitMiddleware } from './middleware/rate-limit';
-
-const app = express();
-
-app.use('/api', rateLimitMiddleware);
-app.get('/api/data', (req, res) => {
-  res.json({ data: 'Protected data' });
-});
-```
-
-## How It Works
-
-Limitly uses a hosted API service that handles all the rate limiting logic:
-
-- **No infrastructure needed**: The SDK connects to `https://api.limitly.emmanueltaiwo.dev` by default
-- **Free to use**: No API keys or payments required
-- **Distributed**: Works across multiple servers and instances
-- **Redis-backed**: The service uses Redis for fast, distributed rate limiting
-- **Graceful degradation**: If the service is unavailable, requests are allowed (fail open)
-
 ## Troubleshooting
 
-### Connection Issues
-
-If you see connection errors:
-
-1. **Check your internet connection**: The SDK needs to connect to Limitly's hosted service
-2. **Verify the service URL**: Default is `https://api.limitly.emmanueltaiwo.dev`
-3. **Check firewall**: Ensure your server can make outbound HTTPS requests
-4. **Timeout settings**: Increase timeout if you have slow network connections
-
-### Common Errors
-
-**Error: "Rate limit check timed out"**
-- Network connection is slow
-- Increase timeout in client configuration: `timeout: 10000`
-
-**Error: "Rate limit check failed"**
-- Service is temporarily unavailable
-- The SDK will fail open (allow requests) by default
-- Check service status if issues persist
-
-**No errors but rate limiting not working**
-- Check that you're passing an identifier to `checkLimit()`
-- Verify the service ID is correct if using one
-- Check network connectivity to the API service
+**Connection errors**: Check internet connection and firewall settings  
+**Timeout errors**: Increase timeout: `timeout: 10000`  
+**Not working**: Verify identifier is passed and service ID is correct
 
 ## Next Steps
 
-Now that you have Limitly installed, check out:
-
-- ⚡ [Quick Start](./quick-start) - See Limitly in action with real examples
-- 📚 [Basic Examples](../examples/basic) - Common use cases and patterns
-- 🔧 [API Reference](../api-reference/createclient) - Full API documentation
+- [Quick Start](./quick-start) - See it in action
+- [Basic Examples](../examples/basic) - Common patterns
+- [API Reference](../api-reference/createclient) - Full docs

@@ -5,366 +5,147 @@ description: Get your first rate limiter up and running in just a few lines of c
 
 # Quick Start
 
-Get started with Limitly in minutes. This guide shows you how to add rate limiting to your application with practical examples for popular frameworks.
+Get started with Limitly in minutes.
 
 ## Basic Example
-
-The simplest way to use Limitly:
 
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
-// Create a rate limiter (uses default settings)
 const checkLimit = rateLimit();
-
-// Check rate limit for a user
 const result = await checkLimit('user-123');
 
 if (result.allowed) {
-  console.log(`Request allowed. Remaining: ${result.remaining}`);
-  // Process your request
+  console.log(`Allowed. Remaining: ${result.remaining}`);
 } else {
   console.log('Rate limit exceeded!');
-  // Return 429 Too Many Requests
 }
 ```
 
-## Next.js App Router
+## Next.js
 
-Protect your Next.js API routes:
+### App Router
 
 ```typescript
-// app/api/protected/route.ts
+// app/api/route.ts
 import { rateLimit } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
 const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
 
 export async function GET(request: Request) {
-  // Get user identifier from headers or IP
-  const userId = request.headers.get('x-user-id') || 
-                 request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                 'anonymous';
-  
-  // Check rate limit
+  const userId = request.headers.get('x-user-id') || 'anonymous';
   const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    
-    return NextResponse.json(
-      { 
-        error: 'Too many requests',
-        retryAfter 
-      },
-      { 
-        status: 429,
-        headers: {
-          'Retry-After': retryAfter.toString(),
-          'X-RateLimit-Limit': result.limit?.toString() || '100',
-          'X-RateLimit-Remaining': result.remaining?.toString() || '0',
-          'X-RateLimit-Reset': result.reset ? Math.ceil(result.reset / 1000).toString() : ''
-        }
-      }
-    );
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
   
-  // Your API logic here
-  return NextResponse.json({ 
-    success: true,
-    data: 'Your protected data',
-    rateLimit: {
-      remaining: result.remaining,
-      limit: result.limit
-    }
-  });
+  return NextResponse.json({ success: true });
 }
 ```
 
-### Next.js Pages Router
-
-For the Pages Router (legacy):
+### Pages Router
 
 ```typescript
-// pages/api/protected.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
+// pages/api/route.ts
 import { rateLimit } from 'limitly-sdk';
 
-const checkLimit = rateLimit({ serviceId: 'nextjs-pages-api' });
+const checkLimit = rateLimit({ serviceId: 'nextjs-api' });
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const userId = req.headers['x-user-id'] as string || 
-                 req.socket.remoteAddress || 
-                 'anonymous';
-  
+export default async function handler(req, res) {
+  const userId = req.headers['x-user-id'] || 'anonymous';
   const result = await checkLimit(userId);
   
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    
-    res.setHeader('Retry-After', retryAfter.toString());
-    res.setHeader('X-RateLimit-Limit', result.limit?.toString() || '100');
-    res.setHeader('X-RateLimit-Remaining', result.remaining?.toString() || '0');
-    res.setHeader('X-RateLimit-Reset', result.reset ? Math.ceil(result.reset / 1000).toString() : '');
-    
-    return res.status(429).json({
-      error: 'Too many requests',
-      retryAfter
-    });
+    return res.status(429).json({ error: 'Rate limit exceeded' });
   }
   
-  // Your API logic
-  res.status(200).json({ 
-    success: true,
-    data: 'Your protected data'
-  });
+  res.status(200).json({ success: true });
 }
 ```
 
 ## Express.js
 
-Create a reusable middleware:
-
 ```typescript
 // middleware/rate-limit.ts
 import { rateLimit } from 'limitly-sdk';
-import type { Request, Response, NextFunction } from 'express';
-
 const checkLimit = rateLimit({ serviceId: 'express-api' });
 
-export async function rateLimitMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    // Get identifier from user session, IP, or headers
-    const identifier = (req as any).user?.id || 
-                      req.ip || 
-                      req.headers['x-forwarded-for']?.toString().split(',')[0] || 
-                      'anonymous';
-    
-    const result = await checkLimit(identifier);
-    
-    // Set rate limit headers
-    if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
-    if (result.remaining !== undefined) res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
-    if (result.reset) res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
-    
-    if (!result.allowed) {
-      const retryAfter = result.reset 
-        ? Math.ceil((result.reset - Date.now()) / 1000) 
-        : 60;
-      
-      res.setHeader('Retry-After', retryAfter.toString());
-      return res.status(429).json({
-        error: 'Rate limit exceeded',
-        message: 'Too many requests, please try again later',
-        retryAfter
-      });
-    }
-    
-    next();
-  } catch (error) {
-    console.error('Rate limit error:', error);
-    // On error, allow the request (fail open)
-    next();
-  }
-}
-```
-
-Apply to your routes:
-
-```typescript
-// app.ts
-import express from 'express';
-import { rateLimitMiddleware } from './middleware/rate-limit';
-
-const app = express();
-
-// Apply to all API routes
-app.use('/api', rateLimitMiddleware);
-
-// Or apply to specific routes
-app.get('/api/data', rateLimitMiddleware, (req, res) => {
-  res.json({ data: 'Protected data' });
-});
-
-app.post('/api/submit', rateLimitMiddleware, (req, res) => {
-  res.json({ success: true });
-});
-```
-
-## Fastify
-
-Create a plugin:
-
-```typescript
-// plugins/rate-limit.ts
-import { FastifyPluginAsync } from 'fastify';
-import { rateLimit } from 'limitly-sdk';
-
-const checkLimit = rateLimit({ serviceId: 'fastify-api' });
-
-const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
-  fastify.addHook('onRequest', async (request, reply) => {
-    const identifier = (request as any).user?.id || 
-                      request.ip || 
-                      request.headers['x-forwarded-for']?.toString().split(',')[0] || 
-                      'anonymous';
-    
-    const result = await checkLimit(identifier);
-    
-    // Set headers
-    if (result.limit) reply.header('X-RateLimit-Limit', result.limit.toString());
-    if (result.remaining !== undefined) reply.header('X-RateLimit-Remaining', result.remaining.toString());
-    if (result.reset) reply.header('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
-    
-    if (!result.allowed) {
-      const retryAfter = result.reset 
-        ? Math.ceil((result.reset - Date.now()) / 1000 
-        : 60;
-      
-      reply.header('Retry-After', retryAfter.toString());
-      return reply.code(429).send({
-        error: 'Rate limit exceeded',
-        retryAfter
-      });
-    }
-  });
-};
-
-export default rateLimitPlugin;
-```
-
-Register the plugin:
-
-```typescript
-// app.ts
-import Fastify from 'fastify';
-import rateLimitPlugin from './plugins/rate-limit';
-
-const fastify = Fastify({ logger: true });
-
-// Register plugin
-await fastify.register(rateLimitPlugin);
-
-fastify.get('/api/data', async (request, reply) => {
-  return { data: 'Protected data' };
-});
-
-await fastify.listen({ port: 3000 });
-```
-
-## Hono
-
-Use with Hono framework:
-
-```typescript
-// app.ts
-import { Hono } from 'hono';
-import { rateLimit } from 'limitly-sdk';
-
-const app = new Hono();
-const checkLimit = rateLimit({ serviceId: 'hono-api' });
-
-// Middleware
-app.use('*', async (c, next) => {
-  const identifier = c.req.header('x-user-id') || 
-                    c.req.header('x-forwarded-for') || 
-                    'anonymous';
-  
+export async function rateLimitMiddleware(req, res, next) {
+  const identifier = req.user?.id || req.ip || 'anonymous';
   const result = await checkLimit(identifier);
   
   if (!result.allowed) {
-    const retryAfter = result.reset 
-      ? Math.ceil((result.reset - Date.now()) / 1000) 
-      : 60;
-    
-    return c.json(
-      { error: 'Rate limit exceeded', retryAfter },
-      429,
-      {
-        'Retry-After': retryAfter.toString(),
-        'X-RateLimit-Limit': result.limit?.toString() || '100',
-        'X-RateLimit-Remaining': result.remaining?.toString() || '0'
-      }
-    );
+    return res.status(429).json({ error: 'Rate limit exceeded' });
   }
+  next();
+}
+
+// app.ts
+app.use('/api', rateLimitMiddleware);
+```
+
+## Other Frameworks
+
+### Fastify
+
+```typescript
+const checkLimit = rateLimit({ serviceId: 'fastify-api' });
+
+fastify.addHook('onRequest', async (request, reply) => {
+  const identifier = request.user?.id || request.ip || 'anonymous';
+  const result = await checkLimit(identifier);
   
+  if (!result.allowed) {
+    return reply.code(429).send({ error: 'Rate limit exceeded' });
+  }
+});
+```
+
+### Hono
+
+```typescript
+const checkLimit = rateLimit({ serviceId: 'hono-api' });
+
+app.use('*', async (c, next) => {
+  const identifier = c.req.header('x-user-id') || 'anonymous';
+  const result = await checkLimit(identifier);
+  
+  if (!result.allowed) {
+    return c.json({ error: 'Rate limit exceeded' }, 429);
+  }
   await next();
 });
-
-app.get('/api/data', (c) => {
-  return c.json({ data: 'Protected data' });
-});
 ```
 
-## Custom Rate Limits
-
-Configure different limits per endpoint or user:
+## Custom Limits
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
-
 const checkLimit = rateLimit({ serviceId: 'my-api' });
 
-// Different limits for different operations
-async function checkApiLimit(userId: string, endpoint: string) {
-  const limits: Record<string, { capacity: number; refillRate: number }> = {
-    '/api/search': { capacity: 100, refillRate: 10 },      // 10 req/sec
-    '/api/upload': { capacity: 10, refillRate: 1 },        // 1 req/sec
-    '/api/export': { capacity: 5, refillRate: 0.5 },       // 1 req/2sec
-  };
-  
-  const limit = limits[endpoint] || { capacity: 50, refillRate: 5 };
-  
-  return await checkLimit({
-    identifier: userId,
-    ...limit
-  });
-}
+// Per-endpoint limits
+const limits = {
+  '/api/search': { capacity: 100, refillRate: 10 },
+  '/api/upload': { capacity: 10, refillRate: 1 }
+};
 
-// Usage
-const result = await checkApiLimit('user-123', '/api/upload');
-```
+const result = await checkLimit({
+  identifier: userId,
+  ...limits[endpoint]
+});
 
-## User Tier-Based Limits
+// User tier limits
+const tierLimits = {
+  free: { capacity: 100, refillRate: 10 },
+  premium: { capacity: 1000, refillRate: 100 }
+};
 
-Implement different limits for free vs premium users:
-
-```typescript
-import { createClient } from 'limitly-sdk';
-
-const client = createClient({ serviceId: 'tiered-api' });
-
-async function checkTieredLimit(user: { id: string; plan: 'free' | 'premium' }) {
-  const limits = {
-    free: { capacity: 100, refillRate: 10 },
-    premium: { capacity: 1000, refillRate: 100 }
-  };
-  
-  const limit = limits[user.plan];
-  
-  return await client.checkRateLimit({
-    identifier: user.id,
-    ...limit
-  });
-}
+await checkLimit({ identifier: user.id, ...tierLimits[user.plan] });
 ```
 
 ## Next Steps
 
-Now that you have the basics, explore more:
-
-- 📚 [Basic Examples](../examples/basic) - Common patterns and use cases
-- 🚀 [Advanced Examples](../examples/advanced) - Complex scenarios
-- 🔧 [API Reference](../api-reference/ratelimit) - Full API documentation
-- 🎓 [Framework Guides](../guides/express) - Detailed integration guides
+- [Basic Examples](../examples/basic) - Common patterns
+- [Advanced Examples](../examples/advanced) - Complex scenarios
+- [API Reference](../api-reference/ratelimit) - Full docs
