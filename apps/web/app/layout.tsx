@@ -34,8 +34,8 @@ export const metadata: Metadata = {
     "express rate limit",
     "nextjs rate limit",
   ],
-  authors: [{ name: "Limitly" }],
-  creator: "Limitly",
+  authors: [{ name: "Emmanuel Taiwo" }],
+  creator: "Emmanuel Taiwo",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Limitly - Free Rate Limiting SDK",
     description: "The best TypeScript-first rate limiting SDK. Free, fast, and fully type-safe.",
-    creator: "@limitly",
+    creator: "@ez0xai",
   },
   robots: {
     index: true,
