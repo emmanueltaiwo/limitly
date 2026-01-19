@@ -224,7 +224,7 @@ ISC
 
 ## Links
 
-- [Documentation](https://limitly.emmanueltaiwo.dev/docs)
+- [Documentation](https://limitly.xyz/docs)
 - [SDK Package](./packages/sdk/README.md)
 - [Core Service](./packages/core/README.md)
 - [Web App](./apps/web/README.md)

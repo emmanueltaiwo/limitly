@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://limitly.emmanueltaiwo.dev",
+    url: "https://limitly.xyz",
     title: "Limitly - Free Rate Limiting SDK",
     description: "The best TypeScript-first rate limiting SDK. Free, fast, and fully type-safe.",
     siteName: "Limitly",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  metadataBase: new URL("https://limitly.emmanueltaiwo.dev"),
+  metadataBase: new URL("https://limitly.xyz"),
 };
 
 export default function RootLayout({
