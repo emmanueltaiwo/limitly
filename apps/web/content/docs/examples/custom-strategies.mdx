@@ -1,58 +1,362 @@
 ---
 title: Custom Rate Limit Strategies
-description: Implement custom rate limiting strategies for different use cases.
+description: Implement custom rate limiting strategies for different use cases. Learn patterns for per-endpoint limits, adaptive limits, and tier-based systems.
 ---
 
 # Custom Rate Limit Strategies
 
-## Strategy 1: Per-endpoint limits
+Learn how to implement custom rate limiting strategies tailored to your specific use cases. These patterns can be combined and adapted to fit your application's needs.
+
+## Strategy 1: Per-Endpoint Limits
+
+Different endpoints have different resource requirements. Apply appropriate limits:
 
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+const client = createClient({ serviceId: 'endpoint-based' });
 
-async function protectEndpoint(endpoint, req) {
-  const limits: Record<string, { capacity: number; refillRate: number }> = {
-    '/api/login': { capacity: 5, refillRate: 0.1 },      // 5 attempts, refill 1 per 10 seconds
-    '/api/data': { capacity: 100, refillRate: 10 },      // 100 requests, refill 10 per second
-    '/api/export': { capacity: 10, refillRate: 0.5 }     // 10 requests, refill 0.5 per second
+// Define limits per endpoint based on resource usage
+const endpointLimits: Record<string, { capacity: number; refillRate: number }> = {
+  // Authentication endpoints - very strict
+  '/api/login': { capacity: 5, refillRate: 0.1 },        // 5 attempts, 1 per 10 seconds
+  '/api/register': { capacity: 3, refillRate: 0.05 },    // 3 attempts, 1 per 20 seconds
+  '/api/reset-password': { capacity: 3, refillRate: 0.05 },
+  
+  // Data endpoints - moderate limits
+  '/api/data': { capacity: 100, refillRate: 10 },        // 100 requests, 10 per second
+  '/api/search': { capacity: 50, refillRate: 5 },        // 50 requests, 5 per second
+  
+  // Heavy operations - strict limits
+  '/api/export': { capacity: 10, refillRate: 0.5 },      // 10 exports, 1 per 2 seconds
+  '/api/generate-report': { capacity: 5, refillRate: 0.2 }, // 5 reports, 1 per 5 seconds
+  '/api/bulk-upload': { capacity: 3, refillRate: 0.1 },  // 3 uploads, 1 per 10 seconds
+  
+  // Light operations - lenient limits
+  '/api/health': { capacity: 1000, refillRate: 100 },    // 1000 requests, 100 per second
+  '/api/ping': { capacity: 1000, refillRate: 100 }
+};
+
+async function protectEndpoint(endpoint: string, userId: string) {
+  // Get limits for this endpoint, or use defaults
+  const limits = endpointLimits[endpoint] || { 
+    capacity: 50, 
+    refillRate: 5 
   };
-
-  const limit = limits[endpoint] || { capacity: 100, refillRate: 10 };
   
-  return await client.checkRateLimit({
-    identifier: req.user?.id || req.ip,
-    ...limit
+  // Use endpoint in identifier to separate limits per endpoint
+  const result = await client.checkRateLimit({
+    identifier: `${userId}:${endpoint}`,
+    ...limits
   });
+  
+  return result;
+}
+
+// Usage in your API
+async function handleRequest(endpoint: string, userId: string) {
+  const result = await protectEndpoint(endpoint, userId);
+  
+  if (!result.allowed) {
+    return {
+      error: 'Rate limit exceeded for this endpoint',
+      endpoint,
+      retryAfter: result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60
+    };
+  }
+  
+  // Process request
+  return { success: true };
 }
 ```
 
-## Strategy 2: Adaptive limits based on load
+## Strategy 2: Adaptive Limits Based on Load
+
+Dynamically adjust rate limits based on system load:
 
 ```typescript
-async function adaptiveLimit(req) {
-  const systemLoad = await getSystemLoad();  // Your monitoring
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'adaptive' });
+
+// Simulate system monitoring
+interface SystemMetrics {
+  cpuUsage: number;      // 0-100
+  memoryUsage: number;   // 0-100
+  requestQueue: number;  // Number of queued requests
+}
+
+async function getSystemMetrics(): Promise<SystemMetrics> {
+  // In production, get from your monitoring system
+  // (Prometheus, CloudWatch, Datadog, etc.)
+  return {
+    cpuUsage: 45,
+    memoryUsage: 60,
+    requestQueue: 10
+  };
+}
+
+function calculateAdaptiveLimits(
+  baseCapacity: number,
+  baseRefillRate: number,
+  metrics: SystemMetrics
+): { capacity: number; refillRate: number } {
+  // Calculate overall system load (weighted average)
+  const systemLoad = (
+    metrics.cpuUsage * 0.4 +
+    metrics.memoryUsage * 0.4 +
+    Math.min(metrics.requestQueue / 100, 1) * 100 * 0.2
+  );
+  
+  // Reduce limits when system is under stress
+  if (systemLoad > 80) {
+    // Critical load - reduce to 30% of base
+    return {
+      capacity: Math.floor(baseCapacity * 0.3),
+      refillRate: Math.floor(baseRefillRate * 0.3)
+    };
+  } else if (systemLoad > 60) {
+    // High load - reduce to 50% of base
+    return {
+      capacity: Math.floor(baseCapacity * 0.5),
+      refillRate: Math.floor(baseRefillRate * 0.5)
+    };
+  } else if (systemLoad > 40) {
+    // Medium load - reduce to 75% of base
+    return {
+      capacity: Math.floor(baseCapacity * 0.75),
+      refillRate: Math.floor(baseRefillRate * 0.75)
+    };
+  }
+  
+  // Normal load - use base limits
+  return {
+    capacity: baseCapacity,
+    refillRate: baseRefillRate
+  };
+}
+
+async function checkAdaptiveLimit(userId: string) {
+  const metrics = await getSystemMetrics();
+  const baseCapacity = 100;
+  const baseRefillRate = 10;
+  
+  const limits = calculateAdaptiveLimits(baseCapacity, baseRefillRate, metrics);
   
   return await client.checkRateLimit({
-    identifier: req.user?.id || req.ip,
-    capacity: systemLoad > 80 ? 50 : 100,
-    refillRate: systemLoad > 80 ? 5 : 10
+    identifier: userId,
+    ...limits
   });
 }
 ```
 
-## Strategy 3: User tier-based limits
+## Strategy 3: User Tier-Based Limits
+
+Implement different limits for free, premium, and enterprise users:
 
 ```typescript
-async function tierBasedLimit(req) {
-  const isPremium = req.user?.plan === 'premium';
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'tiered' });
+
+interface User {
+  id: string;
+  plan: 'free' | 'pro' | 'enterprise';
+  isAdmin?: boolean;
+  customLimits?: { capacity: number; refillRate: number };
+}
+
+// Base limits per tier
+const tierLimits = {
+  free: {
+    capacity: 100,
+    refillRate: 10,
+    endpoints: {
+      '/api/search': { capacity: 50, refillRate: 5 },
+      '/api/export': { capacity: 1, refillRate: 0.1 }  // 1 export per 10 seconds
+    }
+  },
+  pro: {
+    capacity: 1000,
+    refillRate: 100,
+    endpoints: {
+      '/api/search': { capacity: 500, refillRate: 50 },
+      '/api/export': { capacity: 10, refillRate: 1 }
+    }
+  },
+  enterprise: {
+    capacity: 10000,
+    refillRate: 1000,
+    endpoints: {
+      '/api/search': { capacity: 5000, refillRate: 500 },
+      '/api/export': { capacity: 100, refillRate: 10 }
+    }
+  }
+};
+
+async function checkTierBasedLimit(
+  user: User, 
+  endpoint?: string
+) {
+  // Admins bypass all rate limits
+  if (user.isAdmin) {
+    return {
+      allowed: true,
+      limit: Infinity,
+      remaining: Infinity,
+      tier: 'admin'
+    };
+  }
+  
+  // Use custom limits if provided
+  if (user.customLimits) {
+    return await client.checkRateLimit({
+      identifier: user.id,
+      ...user.customLimits
+    });
+  }
+  
+  // Get tier configuration
+  const tierConfig = tierLimits[user.plan];
+  
+  // Check if endpoint has specific limits
+  const endpointLimits = endpoint && tierConfig.endpoints[endpoint]
+    ? tierConfig.endpoints[endpoint]
+    : null;
+  
+  const limits = endpointLimits || {
+    capacity: tierConfig.capacity,
+    refillRate: tierConfig.refillRate
+  };
+  
+  const result = await client.checkRateLimit({
+    identifier: `${user.id}:${endpoint || 'default'}`,
+    ...limits
+  });
+  
+  return {
+    ...result,
+    tier: user.plan
+  };
+}
+
+// Usage
+const freeUser: User = { id: 'user-1', plan: 'free' };
+const proUser: User = { id: 'user-2', plan: 'pro' };
+const enterpriseUser: User = { id: 'user-3', plan: 'enterprise' };
+
+const freeResult = await checkTierBasedLimit(freeUser, '/api/export');
+const proResult = await checkTierBasedLimit(proUser, '/api/search');
+const enterpriseResult = await checkTierBasedLimit(enterpriseUser);
+```
+
+## Strategy 4: Time-of-Day Based Limits
+
+Adjust limits based on time of day or day of week:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'time-based' });
+
+interface TimeBasedConfig {
+  peakHours: { capacity: number; refillRate: number };
+  offPeakHours: { capacity: number; refillRate: number };
+  weekend: { capacity: number; refillRate: number };
+}
+
+const timeConfig: TimeBasedConfig = {
+  peakHours: { capacity: 50, refillRate: 5 },      // Stricter during business hours
+  offPeakHours: { capacity: 200, refillRate: 20 }, // More lenient during off-hours
+  weekend: { capacity: 300, refillRate: 30 }       // Most lenient on weekends
+};
+
+function getTimeBasedLimits(): { capacity: number; refillRate: number } {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+  
+  // Weekend
+  if (day === 0 || day === 6) {
+    return timeConfig.weekend;
+  }
+  
+  // Peak hours: 9 AM - 5 PM (9-17)
+  if (hour >= 9 && hour < 17) {
+    return timeConfig.peakHours;
+  }
+  
+  // Off-peak hours
+  return timeConfig.offPeakHours;
+}
+
+async function checkTimeBasedLimit(userId: string) {
+  const limits = getTimeBasedLimits();
   
   return await client.checkRateLimit({
-    identifier: req.user?.id || req.ip,
-    capacity: isPremium ? 1000 : 100,
-    refillRate: isPremium ? 100 : 10,
-    skip: req.user?.isAdmin || false
+    identifier: userId,
+    ...limits
   });
 }
 ```
+
+## Strategy 5: Combined Strategies
+
+Combine multiple strategies for comprehensive rate limiting:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'combined' });
+
+interface RequestContext {
+  user: User;
+  endpoint: string;
+  ip: string;
+  country?: string;
+}
+
+async function checkCombinedLimit(context: RequestContext) {
+  // 1. Get base limits from user tier
+  const tierConfig = tierLimits[context.user.plan];
+  let limits = {
+    capacity: tierConfig.capacity,
+    refillRate: tierConfig.refillRate
+  };
+  
+  // 2. Adjust for endpoint
+  if (tierConfig.endpoints[context.endpoint]) {
+    limits = tierConfig.endpoints[context.endpoint];
+  }
+  
+  // 3. Adjust for time of day
+  const timeLimits = getTimeBasedLimits();
+  limits.capacity = Math.min(limits.capacity, timeLimits.capacity);
+  limits.refillRate = Math.min(limits.refillRate, timeLimits.refillRate);
+  
+  // 4. Adjust for system load
+  const metrics = await getSystemMetrics();
+  const adaptiveLimits = calculateAdaptiveLimits(
+    limits.capacity,
+    limits.refillRate,
+    metrics
+  );
+  
+  // 5. Check rate limit
+  const identifier = `${context.user.id}:${context.endpoint}:${context.country || 'unknown'}`;
+  
+  return await client.checkRateLimit({
+    identifier,
+    ...adaptiveLimits,
+    skip: context.user.isAdmin
+  });
+}
+```
+
+## Next Steps
+
+- 🚀 [Advanced Examples](./advanced) - More complex scenarios
+- 🔧 [API Reference](../api-reference/createclient) - Complete API documentation
+- 🎓 [Guides](../guides/express) - Framework integration guides

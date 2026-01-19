@@ -1,18 +1,50 @@
 ---
 title: TypeScript Support
-description: Limitly is fully typed with TypeScript. Get complete type safety and IDE autocomplete.
+description: Limitly is fully typed with TypeScript. Get complete type safety, IDE autocomplete, and build type-safe wrappers.
 ---
 
 # TypeScript Support
 
-Limitly is fully typed with TypeScript. Get complete type safety and IDE autocomplete.
+Limitly is built with TypeScript and provides complete type definitions out of the box. This means you get full type safety, excellent IDE autocomplete, and the ability to build type-safe wrappers around Limitly.
+
+## Basic Type Safety
+
+All functions and methods are fully typed:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+// TypeScript knows the return type
+const result = await checkLimit('user-123');
+// result: LimitlyResponse
+
+// Type-safe property access
+if (result.allowed) {
+  console.log(result.remaining); // TypeScript knows remaining exists
+}
+```
+
+## Importing Types
+
+Import types for use in your own code:
 
 ```typescript
 import type { 
   LimitlyConfig, 
   LimitlyResponse, 
-  RateLimitOptions 
+  RateLimitOptions,
+  LimitlyClient
 } from 'limitly-sdk';
+```
+
+## Typed Configuration
+
+Create type-safe configuration:
+
+```typescript
+import type { LimitlyConfig } from 'limitly-sdk';
 import { createClient } from 'limitly-sdk';
 
 // Fully typed configuration
@@ -22,15 +54,245 @@ const config: LimitlyConfig = {
 };
 
 const client = createClient(config);
+```
 
-// Type-safe responses
-const result: LimitlyResponse = await client.checkRateLimit({
-  identifier: 'user-123',
+## Typed Responses
+
+Work with typed responses:
+
+```typescript
+import type { LimitlyResponse } from 'limitly-sdk';
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+async function handleRequest(userId: string): Promise<LimitlyResponse> {
+  const result: LimitlyResponse = await checkLimit(userId);
+  
+  if (!result.allowed) {
+    // TypeScript knows reset might exist
+    if (result.reset) {
+      const resetDate = new Date(result.reset);
+      console.log(`Reset at: ${resetDate.toISOString()}`);
+    }
+  }
+  
+  return result;
+}
+```
+
+## Type Guards
+
+Create type guards for better type narrowing:
+
+```typescript
+import type { LimitlyResponse } from 'limitly-sdk';
+
+function isRateLimited(
+  response: LimitlyResponse
+): response is LimitlyResponse & { allowed: false } {
+  return !response.allowed;
+}
+
+function isAllowed(
+  response: LimitlyResponse
+): response is LimitlyResponse & { allowed: true; remaining: number } {
+  return response.allowed && response.remaining !== undefined;
+}
+
+// Usage
+const result = await checkLimit('user-123');
+
+if (isRateLimited(result)) {
+  // TypeScript knows result.allowed is false
+  console.log('Rate limited:', result.message);
+} else if (isAllowed(result)) {
+  // TypeScript knows result.allowed is true and remaining exists
+  console.log('Allowed. Remaining:', result.remaining);
+}
+```
+
+## Typed Wrappers
+
+Build type-safe wrappers around Limitly:
+
+```typescript
+import type { LimitlyResponse, RateLimitOptions } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
+
+interface ProtectedRouteOptions extends RateLimitOptions {
+  userId: string;
+  endpoint?: string;
+}
+
+async function protectedRoute(
+  options: ProtectedRouteOptions
+): Promise<LimitlyResponse> {
+  const client = createClient({ serviceId: 'api' });
+  
+  return client.checkRateLimit({
+    identifier: options.endpoint 
+      ? `${options.userId}:${options.endpoint}`
+      : options.userId,
+    capacity: options.capacity,
+    refillRate: options.refillRate,
+    skip: options.skip
+  });
+}
+
+// Usage with full type safety
+const result = await protectedRoute({
+  userId: 'user-123',
+  endpoint: '/api/data',
   capacity: 100,
   refillRate: 10
 });
+```
 
-if (result.allowed) {
-  console.log(`Remaining: ${result.remaining}`);
+## Generic Helpers
+
+Create generic helper functions:
+
+```typescript
+import type { LimitlyResponse } from 'limitly-sdk';
+import { rateLimit } from 'limitly-sdk';
+
+type RateLimitHandler<T> = (result: LimitlyResponse) => T;
+
+async function withRateLimit<T>(
+  identifier: string,
+  onAllowed: RateLimitHandler<T>,
+  onRateLimited: RateLimitHandler<T>
+): Promise<T> {
+  const checkLimit = rateLimit();
+  const result = await checkLimit(identifier);
+  
+  return result.allowed ? onAllowed(result) : onRateLimited(result);
+}
+
+// Usage
+const response = await withRateLimit(
+  'user-123',
+  (result) => ({ 
+    success: true, 
+    remaining: result.remaining! 
+  }),
+  (result) => ({ 
+    success: false, 
+    error: 'Rate limited',
+    retryAfter: result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60
+  })
+);
+```
+
+## Framework Integration Types
+
+Type-safe integration with frameworks:
+
+```typescript
+// Next.js App Router
+import type { LimitlyResponse } from 'limitly-sdk';
+import { rateLimit } from 'limitly-sdk';
+import { NextResponse } from 'next/server';
+
+const checkLimit = rateLimit();
+
+export async function GET(request: Request): Promise<NextResponse<LimitlyResponse | { error: string }>> {
+  const userId = request.headers.get('x-user-id') || 'anonymous';
+  const result = await checkLimit(userId);
+  
+  if (!result.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 }
+    );
+  }
+  
+  return NextResponse.json(result);
 }
 ```
+
+## Strict Type Checking
+
+Enable strict TypeScript settings for maximum type safety:
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  }
+}
+```
+
+With strict mode, TypeScript will catch potential issues:
+
+```typescript
+const result = await checkLimit('user-123');
+
+// TypeScript error if strict: true
+// Property 'remaining' may be undefined
+console.log(result.remaining.toString());
+
+// Correct way
+if (result.remaining !== undefined) {
+  console.log(result.remaining.toString());
+}
+```
+
+## Type Assertions
+
+Use type assertions when you're certain about types:
+
+```typescript
+const result = await checkLimit('user-123');
+
+// Type assertion when you know remaining exists
+if (result.allowed && result.remaining !== undefined) {
+  const remaining: number = result.remaining;
+  console.log(remaining);
+}
+```
+
+## Utility Types
+
+Create utility types for common patterns:
+
+```typescript
+import type { LimitlyResponse } from 'limitly-sdk';
+
+// Extract only the required fields
+type RateLimitInfo = Pick<LimitlyResponse, 'allowed' | 'remaining' | 'limit'>;
+
+// Make all fields required
+type RequiredRateLimitResponse = Required<LimitlyResponse>;
+
+// Create a response with guaranteed fields
+interface GuaranteedResponse {
+  allowed: boolean;
+  remaining: number;
+  limit: number;
+  reset: number;
+}
+
+function toGuaranteedResponse(
+  response: LimitlyResponse
+): GuaranteedResponse {
+  return {
+    allowed: response.allowed,
+    remaining: response.remaining ?? 0,
+    limit: response.limit ?? 100,
+    reset: response.reset ?? Date.now() + 60000
+  };
+}
+```
+
+## Next Steps
+
+- 🔧 [API Reference](../api-reference/types) - Complete type reference
+- 📚 [Basic Examples](../examples/basic) - Type-safe examples
+- 🚀 [Advanced Examples](../examples/advanced) - Complex typed scenarios

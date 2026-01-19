@@ -1,22 +1,255 @@
 ---
 title: createClient()
-description: Creates a new Limitly client instance for more advanced configurations.
+description: Creates a new Limitly client instance for advanced configurations and custom rate limiting setups.
 ---
 
 # createClient(config?)
 
-Creates a new Limitly client instance for more advanced configurations.
+Creates a new Limitly client instance with custom configuration. Use this when you need more control over the client behavior, such as custom service IDs, timeouts, or Redis connections.
 
-## Configuration
+## Function Signature
+
+```typescript
+function createClient(config?: LimitlyConfig): LimitlyClient
+```
+
+## Parameters
+
+### `config` (optional)
+
+Configuration object for the client:
 
 ```typescript
 interface LimitlyConfig {
-  serviceId?: string;      // Service identifier for isolation
+  serviceId?: string;      // Service identifier for isolation (default: 'default')
+  redisUrl?: string;       // Redis connection URL (default: process.env.REDIS_URL or 'redis://localhost:6379')
   timeout?: number;        // Request timeout in milliseconds (default: 5000)
 }
+```
+
+## Returns
+
+A `LimitlyClient` instance with the following methods:
+
+- `checkRateLimit(options?)` - Check if a request is allowed
+- Other client methods (see API reference)
+
+## Basic Usage
+
+Create a client with default settings:
+
+```typescript
+import { createClient } } from 'limitly-sdk';
+
+const client = createClient();
+```
+
+## Custom Service ID
+
+Isolate rate limits by service or application:
+
+```typescript
+const client = createClient({
+  serviceId: 'my-api-service'
+});
+
+// All rate limits using this client will be isolated under 'my-api-service'
+const result = await client.checkRateLimit({
+  identifier: 'user-123'
+});
+```
+
+This is useful when you have multiple services and want to keep their rate limits separate:
+
+```typescript
+// API service
+const apiClient = createClient({ serviceId: 'api-service' });
+
+// Authentication service
+const authClient = createClient({ serviceId: 'auth-service' });
+
+// Background job service
+const jobClient = createClient({ serviceId: 'job-service' });
+
+// Each service has independent rate limit buckets
+await apiClient.checkRateLimit({ identifier: 'user-123' });
+await authClient.checkRateLimit({ identifier: 'user-123' });
+await jobClient.checkRateLimit({ identifier: 'user-123' });
+```
+
+## Custom Redis Connection
+
+Connect to a specific Redis instance:
+
+```typescript
+const client = createClient({
+  serviceId: 'my-app',
+  redisUrl: 'redis://localhost:6379'
+});
+```
+
+With authentication:
+
+```typescript
+const client = createClient({
+  serviceId: 'my-app',
+  redisUrl: 'redis://:password@localhost:6379'
+});
+```
+
+Using environment variables:
+
+```typescript
+const client = createClient({
+  serviceId: 'my-app',
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+```
+
+For Redis Cloud or managed services:
+
+```typescript
+// Redis Cloud (TLS)
+const client = createClient({
+  serviceId: 'production-api',
+  redisUrl: 'rediss://:password@your-redis-host:port'
+});
+
+// Upstash
+const client = createClient({
+  serviceId: 'production-api',
+  redisUrl: process.env.UPSTASH_REDIS_REST_URL
+});
+```
+
+## Custom Timeout
+
+Set a custom timeout for Redis operations:
+
+```typescript
+const client = createClient({
+  serviceId: 'my-app',
+  timeout: 3000  // 3 seconds timeout
+});
+```
+
+This is useful when:
+- Your Redis instance has higher latency
+- You want faster failure detection
+- You're using a remote Redis service
+
+## Environment-Based Configuration
+
+Create different clients for different environments:
+
+```typescript
+// config/limitly.ts
+import { createClient } from 'limitly-sdk';
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+export const limitlyClient = createClient({
+  serviceId: process.env.SERVICE_ID || 'default',
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  timeout: parseInt(process.env.REDIS_TIMEOUT || '5000', 10)
+});
+
+// Development client with shorter timeout for faster feedback
+export const devClient = createClient({
+  serviceId: 'dev',
+  redisUrl: 'redis://localhost:6379',
+  timeout: 1000
+});
+
+// Production client with longer timeout for reliability
+export const prodClient = createClient({
+  serviceId: process.env.SERVICE_ID || 'production',
+  redisUrl: process.env.REDIS_URL!,
+  timeout: 10000
+});
+```
+
+## Multiple Clients
+
+Create multiple clients for different use cases:
+
+```typescript
+// Strict rate limiting for authentication
+const authClient = createClient({
+  serviceId: 'auth',
+  timeout: 2000
+});
+
+// Lenient rate limiting for public APIs
+const publicClient = createClient({
+  serviceId: 'public-api',
+  timeout: 5000
+});
+
+// Background job rate limiting
+const jobClient = createClient({
+  serviceId: 'background-jobs',
+  timeout: 10000
+});
+```
+
+## Error Handling
+
+Handle connection errors gracefully:
+
+```typescript
+import { createClient } from 'limitly-sdk';
 
 const client = createClient({
   serviceId: 'my-app',
-  timeout: 5000
+  redisUrl: process.env.REDIS_URL
 });
+
+async function checkLimitSafely(userId: string) {
+  try {
+    const result = await client.checkRateLimit({ identifier: userId });
+    return result;
+  } catch (error) {
+    // Handle Redis connection errors
+    if (error instanceof Error) {
+      console.error('Rate limit check failed:', error.message);
+    }
+    
+    // Fail open - allow request if rate limiting fails
+    return {
+      allowed: true,
+      error: 'Rate limit service unavailable'
+    };
+  }
+}
 ```
+
+## Best Practices
+
+1. **Use service IDs**: Always specify a `serviceId` to isolate rate limits
+2. **Environment variables**: Use environment variables for Redis URLs in production
+3. **Connection pooling**: Limitly handles connection pooling automatically
+4. **Singleton pattern**: Create clients once and reuse them:
+
+```typescript
+// lib/limitly.ts
+import { createClient } from 'limitly-sdk';
+
+let client: ReturnType<typeof createClient> | null = null;
+
+export function getLimitlyClient() {
+  if (!client) {
+    client = createClient({
+      serviceId: process.env.SERVICE_ID || 'default',
+      redisUrl: process.env.REDIS_URL || 'redis://localhost:6379'
+    });
+  }
+  return client;
+}
+```
+
+## See Also
+
+- [rateLimit()](./ratelimit) - Quick helper function for simple use cases
+- [checkRateLimit()](./checkratelimit) - Check rate limits with a client
+- [Type Definitions](./types) - Complete type reference

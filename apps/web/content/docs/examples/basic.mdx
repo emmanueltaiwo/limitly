@@ -1,23 +1,290 @@
 ---
 title: Basic Usage
-description: Simple example of using Limitly in your application.
+description: Simple examples of using Limitly in your application. Learn the fundamentals with practical code examples.
 ---
 
 # Basic Usage
+
+Learn the fundamentals of Limitly with simple, practical examples. These patterns form the foundation for more advanced use cases.
+
+## Simple Rate Limiting
+
+The most basic usage - protect a single endpoint:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+// Create a rate limiter with default settings
+const checkLimit = rateLimit();
+
+// In your API handler
+async function handleRequest(userId: string) {
+  // Check rate limit
+  const result = await checkLimit(userId);
+  
+  if (!result.allowed) {
+    throw new Error('Rate limit exceeded');
+  }
+  
+  // Process request
+  console.log(`Request allowed. ${result.remaining} requests remaining.`);
+  return { success: true };
+}
+```
+
+## Understanding the Response
+
+The `checkLimit` function returns a `LimitlyResponse` object:
+
+```typescript
+interface LimitlyResponse {
+  allowed: boolean;        // true if request is allowed
+  limit?: number;          // Total capacity (e.g., 100)
+  remaining?: number;      // Requests remaining (e.g., 95)
+  reset?: number;          // Unix timestamp (ms) when bucket refills
+  message?: string;        // Optional error message
+}
+
+// Example response
+const result = await checkLimit('user-123');
+// {
+//   allowed: true,
+//   limit: 100,
+//   remaining: 99,
+//   reset: 1705000000000
+// }
+```
+
+## Custom Rate Limits
+
+Override default limits per request:
 
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
-// In your handler
-const result = await checkLimit('user-123');
+// Custom limits for this specific check
+const result = await checkLimit({
+  identifier: 'user-123',
+  capacity: 50,      // Maximum 50 requests
+  refillRate: 5      // Refill 5 tokens per second
+});
 
 if (result.allowed) {
-  // Process request
-  console.log(`Remaining: ${result.remaining}`);
+  console.log(`${result.remaining} requests remaining`);
 } else {
-  // Handle rate limit
-  console.log('Rate limited!');
+  console.log(`Rate limited. Reset at: ${new Date(result.reset!)}`);
 }
 ```
+
+## Per-User Rate Limiting
+
+Track limits separately for each user:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit({ serviceId: 'user-api' });
+
+async function handleUserRequest(userId: string) {
+  // Each user gets their own rate limit bucket
+  const result = await checkLimit(userId);
+  
+  if (!result.allowed) {
+    return {
+      error: 'Rate limit exceeded',
+      retryAfter: result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60
+    };
+  }
+  
+  return {
+    success: true,
+    rateLimit: {
+      remaining: result.remaining,
+      limit: result.limit
+    }
+  };
+}
+
+// Usage
+const response1 = await handleUserRequest('user-123');
+const response2 = await handleUserRequest('user-456'); // Different bucket
+```
+
+## IP-Based Rate Limiting
+
+Limit requests by IP address:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit({ serviceId: 'ip-based' });
+
+async function handleRequest(request: Request) {
+  // Extract IP from request
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+             request.headers.get('x-real-ip') || 
+             'unknown';
+  
+  const result = await checkLimit(ip);
+  
+  if (!result.allowed) {
+    return Response.json(
+      { error: 'Too many requests from this IP' },
+      { status: 429 }
+    );
+  }
+  
+  return Response.json({ success: true });
+}
+```
+
+## Endpoint-Specific Limits
+
+Apply different limits to different endpoints:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit({ serviceId: 'multi-endpoint' });
+
+// Define limits per endpoint
+const endpointLimits = {
+  '/api/login': { capacity: 5, refillRate: 0.1 },      // 5 attempts per 10 seconds
+  '/api/search': { capacity: 100, refillRate: 10 },    // 100 requests per second
+  '/api/upload': { capacity: 10, refillRate: 1 },      // 10 uploads per second
+  '/api/export': { capacity: 3, refillRate: 0.1 }      // 3 exports per 10 seconds
+};
+
+async function protectEndpoint(endpoint: string, userId: string) {
+  const limits = endpointLimits[endpoint] || { capacity: 50, refillRate: 5 };
+  
+  const result = await checkLimit({
+    identifier: `${userId}:${endpoint}`, // Unique per user+endpoint
+    ...limits
+  });
+  
+  return result;
+}
+
+// Usage
+const loginResult = await protectEndpoint('/api/login', 'user-123');
+const searchResult = await protectEndpoint('/api/search', 'user-123');
+```
+
+## Handling Rate Limit Errors
+
+Properly handle and communicate rate limit errors:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+async function handleRequest(userId: string) {
+  try {
+    const result = await checkLimit(userId);
+    
+    if (!result.allowed) {
+      // Calculate retry after seconds
+      const retryAfter = result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60;
+      
+      return {
+        error: 'Rate limit exceeded',
+        message: 'Too many requests. Please try again later.',
+        retryAfter,
+        resetAt: result.reset ? new Date(result.reset).toISOString() : undefined
+      };
+    }
+    
+    // Request allowed
+    return {
+      success: true,
+      rateLimit: {
+        remaining: result.remaining,
+        limit: result.limit,
+        resetAt: result.reset ? new Date(result.reset).toISOString() : undefined
+      }
+    };
+  } catch (error) {
+    // Handle Redis connection errors, etc.
+    console.error('Rate limit check failed:', error);
+    // Fail open - allow request if rate limiting fails
+    return { success: true, rateLimitError: true };
+  }
+}
+```
+
+## Setting Rate Limit Headers
+
+Include rate limit information in HTTP headers:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+async function handleRequest(request: Request) {
+  const userId = request.headers.get('x-user-id') || 'anonymous';
+  const result = await checkLimit(userId);
+  
+  const headers = new Headers();
+  
+  // Standard rate limit headers
+  if (result.limit) headers.set('X-RateLimit-Limit', result.limit.toString());
+  if (result.remaining !== undefined) {
+    headers.set('X-RateLimit-Remaining', result.remaining.toString());
+  }
+  if (result.reset) {
+    headers.set('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
+  }
+  
+  if (!result.allowed) {
+    const retryAfter = result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60;
+    headers.set('Retry-After', retryAfter.toString());
+    
+    return Response.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers }
+    );
+  }
+  
+  return Response.json(
+    { success: true },
+    { headers }
+  );
+}
+```
+
+## Multiple Service Isolation
+
+Use different service IDs to isolate rate limits:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+// Different services have separate rate limit buckets
+const apiLimiter = rateLimit({ serviceId: 'api-service' });
+const authLimiter = rateLimit({ serviceId: 'auth-service' });
+const uploadLimiter = rateLimit({ serviceId: 'upload-service' });
+
+// Each service tracks limits independently
+const apiResult = await apiLimiter('user-123');
+const authResult = await authLimiter('user-123');
+const uploadResult = await uploadLimiter('user-123');
+```
+
+## Next Steps
+
+Now that you understand the basics:
+
+- 🚀 [Advanced Examples](./advanced) - Complex scenarios and patterns
+- 🎯 [Custom Strategies](./custom-strategies) - Implement custom rate limiting logic
+- 🔧 [API Reference](../api-reference/ratelimit) - Complete API documentation

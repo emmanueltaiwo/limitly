@@ -1,41 +1,404 @@
 ---
-title: Express.js Middleware
-description: Protect your Express routes with a simple middleware.
+title: Express.js Integration
+description: Protect your Express routes with Limitly. Learn how to create middleware, handle errors, and set proper HTTP headers.
 ---
 
-# Express.js Middleware
+# Express.js Integration
 
-Protect your Express routes with a simple middleware.
+Learn how to integrate Limitly into your Express.js application with reusable middleware, proper error handling, and best practices.
+
+## Basic Middleware
+
+Create a simple rate limiting middleware:
 
 ```typescript
-import express from 'express';
+// middleware/rate-limit.ts
 import { rateLimit } from 'limitly-sdk';
+import type { Request, Response, NextFunction } from 'express';
 
-const app = express();
-const checkLimit = rateLimit({ serviceId: 'my-api' });
+const checkLimit = rateLimit({ serviceId: 'express-api' });
 
-// Middleware approach
-app.use(async (req, res, next) => {
-  const result = await checkLimit({
-    identifier: req.user?.id || req.ip,
-    capacity: 100,
-    refillRate: 10
-  });
-
+export async function rateLimitMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  // Get identifier from user session, IP, or headers
+  const identifier = (req as any).user?.id || 
+                    req.ip || 
+                    req.headers['x-forwarded-for']?.toString().split(',')[0] || 
+                    'anonymous';
+  
+  const result = await checkLimit(identifier);
+  
+  // Set rate limit headers
+  if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
+  if (result.remaining !== undefined) {
+    res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
+  }
+  if (result.reset) {
+    res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
+  }
+  
   if (!result.allowed) {
     const retryAfter = result.reset 
       ? Math.ceil((result.reset - Date.now()) / 1000) 
       : 60;
+    
+    res.setHeader('Retry-After', retryAfter.toString());
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Too many requests, please try again later',
+      retryAfter
+    });
+  }
+  
+  next();
+}
+```
+
+## Apply to Routes
+
+Use the middleware on specific routes or globally:
+
+```typescript
+// app.ts
+import express from 'express';
+import { rateLimitMiddleware } from './middleware/rate-limit';
+
+const app = express();
+
+// Apply to all routes
+app.use(rateLimitMiddleware);
+
+// Or apply to specific routes
+app.get('/api/data', rateLimitMiddleware, (req, res) => {
+  res.json({ data: 'Protected data' });
+});
+
+app.post('/api/submit', rateLimitMiddleware, (req, res) => {
+  res.json({ success: true });
+});
+```
+
+## Per-Route Limits
+
+Create middleware factories for different rate limits:
+
+```typescript
+// middleware/rate-limit.ts
+import { rateLimit } from 'limitly-sdk';
+import type { Request, Response, NextFunction } from 'express';
+
+function createRateLimitMiddleware(
+  capacity: number,
+  refillRate: number,
+  serviceId: string = 'express-api'
+) {
+  const checkLimit = rateLimit({ serviceId });
+  
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const identifier = (req as any).user?.id || req.ip || 'anonymous';
+    
+    const result = await checkLimit({
+      identifier,
+      capacity,
+      refillRate
+    });
+    
+    // Set headers
+    if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
+    if (result.remaining !== undefined) {
+      res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
+    }
+    
+    if (!result.allowed) {
+      const retryAfter = result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60;
+      res.setHeader('Retry-After', retryAfter.toString());
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        retryAfter
+      });
+    }
+    
+    next();
+  };
+}
+
+// Export pre-configured middlewares
+export const strictRateLimit = createRateLimitMiddleware(10, 1, 'strict');
+export const moderateRateLimit = createRateLimitMiddleware(100, 10, 'moderate');
+export const lenientRateLimit = createRateLimitMiddleware(1000, 100, 'lenient');
+```
+
+Use them on different routes:
+
+```typescript
+// app.ts
+import express from 'express';
+import { strictRateLimit, moderateRateLimit, lenientRateLimit } from './middleware/rate-limit';
+
+const app = express();
+
+// Strict limits for authentication
+app.post('/api/login', strictRateLimit, (req, res) => {
+  // Login logic
+});
+
+// Moderate limits for data endpoints
+app.get('/api/data', moderateRateLimit, (req, res) => {
+  // Data logic
+});
+
+// Lenient limits for public endpoints
+app.get('/api/public', lenientRateLimit, (req, res) => {
+  // Public logic
+});
+```
+
+## User-Based Rate Limiting
+
+Rate limit based on authenticated users:
+
+```typescript
+// middleware/user-rate-limit.ts
+import { createClient } from 'limitly-sdk';
+import type { Request, Response, NextFunction } from 'express';
+
+const client = createClient({ serviceId: 'user-api' });
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    plan: 'free' | 'pro' | 'enterprise';
+  };
+}
+
+export async function userRateLimitMiddleware(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  // Require authentication
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  // Different limits based on user plan
+  const limits = {
+    free: { capacity: 100, refillRate: 10 },
+    pro: { capacity: 1000, refillRate: 100 },
+    enterprise: { capacity: 10000, refillRate: 1000 }
+  };
+  
+  const userLimits = limits[req.user.plan] || limits.free;
+  
+  const result = await client.checkRateLimit({
+    identifier: req.user.id,
+    ...userLimits
+  });
+  
+  // Set headers
+  if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
+  if (result.remaining !== undefined) {
+    res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
+  }
+  
+  if (!result.allowed) {
+    const retryAfter = result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60;
+    res.setHeader('Retry-After', retryAfter.toString());
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: `You have exceeded your ${req.user.plan} plan limits`,
+      retryAfter
+    });
+  }
+  
+  next();
+}
+```
+
+## Error Handling
+
+Handle rate limit errors gracefully:
+
+```typescript
+// middleware/rate-limit.ts
+import { rateLimit } from 'limitly-sdk';
+import type { Request, Response, NextFunction } from 'express';
+
+const checkLimit = rateLimit({ serviceId: 'express-api' });
+
+export async function rateLimitMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const identifier = (req as any).user?.id || req.ip || 'anonymous';
+    const result = await checkLimit(identifier);
+    
+    // Set headers
+    if (result.limit) res.setHeader('X-RateLimit-Limit', result.limit.toString());
+    if (result.remaining !== undefined) {
+      res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
+    }
+    if (result.reset) {
+      res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
+    }
+    
+    if (!result.allowed) {
+      const retryAfter = result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60;
+      
+      res.setHeader('Retry-After', retryAfter.toString());
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: 'Too many requests, please try again later',
+        retryAfter,
+        resetAt: result.reset ? new Date(result.reset).toISOString() : undefined
+      });
+    }
+    
+    next();
+  } catch (error) {
+    // Handle Redis connection errors, timeouts, etc.
+    console.error('Rate limit check failed:', error);
+    
+    // Fail open - allow request if rate limiting fails
+    // In production, you might want to log this and alert
+    next();
+  }
+}
+```
+
+## Router-Level Application
+
+Apply rate limiting to Express routers:
+
+```typescript
+// routes/api.ts
+import { Router } from 'express';
+import { rateLimitMiddleware } from '../middleware/rate-limit';
+
+const router = Router();
+
+// Apply to all routes in this router
+router.use(rateLimitMiddleware);
+
+router.get('/data', (req, res) => {
+  res.json({ data: 'Protected data' });
+});
+
+router.post('/submit', (req, res) => {
+  res.json({ success: true });
+});
+
+export default router;
+```
+
+## Conditional Rate Limiting
+
+Skip rate limiting for certain conditions:
+
+```typescript
+// middleware/conditional-rate-limit.ts
+import { createClient } from 'limitly-sdk';
+import type { Request, Response, NextFunction } from 'express';
+
+const client = createClient({ serviceId: 'conditional-api' });
+
+export async function conditionalRateLimitMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  // Skip rate limiting for admins
+  if ((req as any).user?.isAdmin) {
+    return next();
+  }
+  
+  // Skip for internal IPs
+  const ip = req.ip || '';
+  if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip === '127.0.0.1') {
+    return next();
+  }
+  
+  // Apply rate limiting
+  const identifier = (req as any).user?.id || ip || 'anonymous';
+  const result = await client.checkRateLimit({
+    identifier,
+    skip: false
+  });
+  
+  if (!result.allowed) {
+    const retryAfter = result.reset 
+      ? Math.ceil((result.reset - Date.now()) / 1000) 
+      : 60;
+    res.setHeader('Retry-After', retryAfter.toString());
     return res.status(429).json({
       error: 'Rate limit exceeded',
       retryAfter
     });
   }
-
+  
   next();
+}
+```
+
+## Complete Example
+
+Putting it all together:
+
+```typescript
+// app.ts
+import express from 'express';
+import { rateLimitMiddleware } from './middleware/rate-limit';
+import { userRateLimitMiddleware } from './middleware/user-rate-limit';
+import apiRoutes from './routes/api';
+
+const app = express();
+
+// Global middleware
+app.use(express.json());
+
+// Apply rate limiting to all API routes
+app.use('/api', rateLimitMiddleware);
+
+// User-specific rate limiting for protected routes
+app.use('/api/protected', userRateLimitMiddleware);
+
+// Routes
+app.use('/api', apiRoutes);
+
+// Error handler
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-app.get('/api/data', (req, res) => {
-  res.json({ data: 'Your API response' });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 ```
+
+## Best Practices
+
+1. **Use service IDs**: Isolate rate limits by service or feature
+2. **Set proper headers**: Always include `X-RateLimit-*` headers
+3. **Handle errors**: Fail open when rate limiting service is unavailable
+4. **User identification**: Use authenticated user IDs when available
+5. **Different limits**: Apply different limits to different routes
+6. **Monitor**: Log rate limit violations for monitoring
+
+## Next Steps
+
+- 📚 [Basic Examples](../examples/basic) - More usage patterns
+- 🚀 [Advanced Examples](../examples/advanced) - Complex scenarios
+- 🔧 [API Reference](../api-reference/ratelimit) - Complete API docs

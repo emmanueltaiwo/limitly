@@ -1,29 +1,344 @@
 ---
 title: Advanced Configuration
-description: Advanced usage patterns with tiered rate limiting.
+description: Advanced usage patterns with tiered rate limiting, dynamic limits, and complex scenarios.
 ---
 
 # Advanced Configuration
+
+Explore advanced patterns and configurations for complex rate limiting scenarios.
+
+## Tiered Rate Limiting
+
+Implement different rate limits based on user tiers or subscription plans:
 
 ```typescript
 import { createClient } from 'limitly-sdk';
 
 const client = createClient({
-  serviceId: 'api-v2',
+  serviceId: 'tiered-api',
   timeout: 3000
 });
 
-// Tiered rate limiting
-async function checkTieredLimit(req) {
-  const isPremium = req.user?.plan === 'premium';
-  
-  const result = await client.checkRateLimit({
-    identifier: req.user?.id || req.ip,
-    capacity: isPremium ? 1000 : 100,      // Premium has higher limit
-    refillRate: isPremium ? 100 : 10,      // Premium refills faster
-    skip: req.user?.isAdmin                // Admins bypass limits
-  });
+interface User {
+  id: string;
+  plan: 'free' | 'pro' | 'enterprise';
+  isAdmin?: boolean;
+}
 
-  return result;
+// Define limits per tier
+const tierLimits = {
+  free: { capacity: 100, refillRate: 10 },        // 10 req/sec
+  pro: { capacity: 1000, refillRate: 100 },       // 100 req/sec
+  enterprise: { capacity: 10000, refillRate: 1000 } // 1000 req/sec
+};
+
+async function checkTieredLimit(user: User, endpoint?: string) {
+  // Admins bypass rate limits
+  if (user.isAdmin) {
+    return {
+      allowed: true,
+      limit: Infinity,
+      remaining: Infinity
+    };
+  }
+  
+  // Get base limits for user tier
+  const baseLimit = tierLimits[user.plan];
+  
+  // Adjust for specific endpoints
+  const endpointAdjustments: Record<string, { capacity: number; refillRate: number }> = {
+    '/api/export': { capacity: baseLimit.capacity * 0.1, refillRate: baseLimit.refillRate * 0.1 },
+    '/api/search': { capacity: baseLimit.capacity * 2, refillRate: baseLimit.refillRate * 2 }
+  };
+  
+  const limits = endpoint 
+    ? { ...baseLimit, ...endpointAdjustments[endpoint] }
+    : baseLimit;
+  
+  return await client.checkRateLimit({
+    identifier: `${user.id}:${endpoint || 'default'}`,
+    ...limits
+  });
+}
+
+// Usage
+const freeUser: User = { id: 'user-1', plan: 'free' };
+const proUser: User = { id: 'user-2', plan: 'pro' };
+
+const freeResult = await checkTieredLimit(freeUser);
+const proResult = await checkTieredLimit(proUser, '/api/search');
+```
+
+## Dynamic Rate Limiting
+
+Adjust rate limits based on system load or other factors:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'adaptive-api' });
+
+// Simulate system load monitoring
+async function getSystemLoad(): Promise<number> {
+  // In real implementation, get from your monitoring system
+  // Returns 0-100 representing CPU/memory usage
+  return Math.random() * 100;
+}
+
+async function checkAdaptiveLimit(userId: string) {
+  const systemLoad = await getSystemLoad();
+  
+  // Reduce limits when system is under heavy load
+  const baseCapacity = 100;
+  const baseRefillRate = 10;
+  
+  const capacity = systemLoad > 80 
+    ? Math.floor(baseCapacity * 0.5)  // 50% capacity under high load
+    : systemLoad > 50
+    ? Math.floor(baseCapacity * 0.75) // 75% capacity under medium load
+    : baseCapacity;                    // Full capacity under normal load
+    
+  const refillRate = systemLoad > 80
+    ? Math.floor(baseRefillRate * 0.5)
+    : systemLoad > 50
+    ? Math.floor(baseRefillRate * 0.75)
+    : baseRefillRate;
+  
+  return await client.checkRateLimit({
+    identifier: userId,
+    capacity,
+    refillRate
+  });
 }
 ```
+
+## Time-Based Rate Limiting
+
+Implement different limits for different times of day:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'time-based' });
+
+function getTimeBasedLimits(): { capacity: number; refillRate: number } {
+  const hour = new Date().getHours();
+  
+  // Peak hours (9 AM - 5 PM) have stricter limits
+  if (hour >= 9 && hour < 17) {
+    return { capacity: 50, refillRate: 5 };  // Stricter during business hours
+  }
+  
+  // Off-peak hours have more lenient limits
+  return { capacity: 200, refillRate: 20 };  // More lenient during off-hours
+}
+
+async function checkTimeBasedLimit(userId: string) {
+  const limits = getTimeBasedLimits();
+  
+  return await client.checkRateLimit({
+    identifier: userId,
+    ...limits
+  });
+}
+```
+
+## Geographic Rate Limiting
+
+Apply different limits based on user location:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'geo-based' });
+
+interface RequestContext {
+  userId: string;
+  country?: string;
+  ip: string;
+}
+
+// Different limits per region
+const regionLimits: Record<string, { capacity: number; refillRate: number }> = {
+  'US': { capacity: 100, refillRate: 10 },
+  'EU': { capacity: 100, refillRate: 10 },
+  'ASIA': { capacity: 200, refillRate: 20 },  // Higher limits for Asia
+  'DEFAULT': { capacity: 50, refillRate: 5 }   // Stricter for unknown regions
+};
+
+async function checkGeographicLimit(context: RequestContext) {
+  // Get country from IP geolocation service or request headers
+  const country = context.country || 'DEFAULT';
+  const limits = regionLimits[country] || regionLimits['DEFAULT'];
+  
+  return await client.checkRateLimit({
+    identifier: `${context.userId}:${country}`,
+    ...limits
+  });
+}
+```
+
+## Sliding Window with Multiple Windows
+
+Implement multiple rate limit windows (per minute, per hour, per day):
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'multi-window' });
+
+async function checkMultiWindowLimit(userId: string) {
+  // Check multiple time windows
+  const [minuteResult, hourResult, dayResult] = await Promise.all([
+    // Per-minute limit
+    client.checkRateLimit({
+      identifier: `${userId}:minute`,
+      capacity: 10,
+      refillRate: 10,
+      window: 60000  // 1 minute
+    }),
+    // Per-hour limit
+    client.checkRateLimit({
+      identifier: `${userId}:hour`,
+      capacity: 1000,
+      refillRate: 1000 / 3600,  // ~0.28 per second
+      window: 3600000  // 1 hour
+    }),
+    // Per-day limit
+    client.checkRateLimit({
+      identifier: `${userId}:day`,
+      capacity: 10000,
+      refillRate: 10000 / 86400,  // ~0.12 per second
+      window: 86400000  // 1 day
+    })
+  ]);
+  
+  // Request is allowed only if all windows allow it
+  const allowed = minuteResult.allowed && hourResult.allowed && dayResult.allowed;
+  
+  return {
+    allowed,
+    windows: {
+      minute: minuteResult,
+      hour: hourResult,
+      day: dayResult
+    },
+    // Return the most restrictive remaining count
+    remaining: Math.min(
+      minuteResult.remaining ?? Infinity,
+      hourResult.remaining ?? Infinity,
+      dayResult.remaining ?? Infinity
+    )
+  };
+}
+```
+
+## Burst Protection
+
+Allow bursts but limit sustained traffic:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'burst-protection' });
+
+async function checkBurstLimit(userId: string) {
+  // Short window for burst detection
+  const burstResult = await client.checkRateLimit({
+    identifier: `${userId}:burst`,
+    capacity: 20,      // Allow 20 requests
+    refillRate: 20,   // Refill 20 per second
+    window: 1000       // 1 second window
+  });
+  
+  // Longer window for sustained rate
+  const sustainedResult = await client.checkRateLimit({
+    identifier: `${userId}:sustained`,
+    capacity: 100,     // 100 requests
+    refillRate: 10,    // Refill 10 per second
+    window: 10000      // 10 second window
+  });
+  
+  // Allow if either window allows (OR logic)
+  // Or require both (AND logic) - current implementation
+  const allowed = burstResult.allowed && sustainedResult.allowed;
+  
+  return {
+    allowed,
+    burst: burstResult,
+    sustained: sustainedResult
+  };
+}
+```
+
+## Rate Limit with Exponential Backoff
+
+Implement exponential backoff for rate-limited users:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({ serviceId: 'backoff' });
+
+interface RateLimitState {
+  attempts: number;
+  lastAttempt: number;
+}
+
+async function checkWithBackoff(userId: string): Promise<{
+  allowed: boolean;
+  backoffSeconds?: number;
+  result: any;
+}> {
+  // Check standard rate limit
+  const result = await client.checkRateLimit({
+    identifier: userId,
+    capacity: 100,
+    refillRate: 10
+  });
+  
+  if (result.allowed) {
+    return { allowed: true, result };
+  }
+  
+  // Calculate exponential backoff
+  // Get previous attempt count from cache or database
+  const state: RateLimitState = await getRateLimitState(userId);
+  const attempts = state.attempts + 1;
+  
+  // Exponential backoff: 2^attempts seconds, max 60 seconds
+  const backoffSeconds = Math.min(Math.pow(2, attempts), 60);
+  
+  // Store state
+  await setRateLimitState(userId, {
+    attempts,
+    lastAttempt: Date.now()
+  });
+  
+  return {
+    allowed: false,
+    backoffSeconds,
+    result: {
+      ...result,
+      message: `Rate limited. Please retry after ${backoffSeconds} seconds.`,
+      retryAfter: backoffSeconds
+    }
+  };
+}
+
+// Helper functions (implement with your cache/database)
+async function getRateLimitState(userId: string): Promise<RateLimitState> {
+  // Get from Redis, database, etc.
+  return { attempts: 0, lastAttempt: 0 };
+}
+
+async function setRateLimitState(userId: string, state: RateLimitState): Promise<void> {
+  // Store in Redis, database, etc.
+}
+```
+
+## Next Steps
+
+- 🎯 [Custom Strategies](./custom-strategies) - Build your own rate limiting strategies
+- 🔧 [API Reference](../api-reference/createclient) - Complete API documentation
+- 🎓 [Guides](../guides/express) - Framework-specific integration guides

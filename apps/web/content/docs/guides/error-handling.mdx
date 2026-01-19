@@ -1,45 +1,370 @@
 ---
 title: Error Handling
-description: Gracefully handle rate limit errors in your application.
+description: Gracefully handle rate limit errors, Redis connection issues, and edge cases in your application.
 ---
 
 # Error Handling
 
-Gracefully handle rate limit errors in your application.
+Proper error handling is crucial for production applications. This guide covers how to handle rate limit errors, Redis connection issues, and edge cases gracefully.
+
+## Basic Error Handling
+
+Handle rate limit errors in your API:
 
 ```typescript
 import { rateLimit } from 'limitly-sdk';
 
 const checkLimit = rateLimit();
 
-async function apiCall(req, res) {
+async function handleRequest(userId: string) {
   try {
-    const result = await checkLimit(req.user?.id || req.ip);
-
+    const result = await checkLimit(userId);
+    
     if (!result.allowed) {
+      // Calculate retry after seconds
       const retryAfter = result.reset 
         ? Math.ceil((result.reset - Date.now()) / 1000) 
         : 60;
       
-      res.setHeader('Retry-After', retryAfter.toString());
-      return res.status(429).json({
-        message: result.message || 'Rate limit exceeded',
+      return {
+        error: 'Rate limit exceeded',
+        message: 'Too many requests. Please try again later.',
         retryAfter,
+        resetAt: result.reset ? new Date(result.reset).toISOString() : undefined
+      };
+    }
+    
+    // Request allowed
+    return {
+      success: true,
+      rateLimit: {
+        remaining: result.remaining,
+        limit: result.limit,
+        resetAt: result.reset ? new Date(result.reset).toISOString() : undefined
+      }
+    };
+  } catch (error) {
+    // Handle Redis connection errors, timeouts, etc.
+    console.error('Rate limit check failed:', error);
+    
+    // Fail open - allow request if rate limiting fails
+    // In production, you might want to log and alert
+    return { 
+      success: true, 
+      rateLimitError: true,
+      warning: 'Rate limiting temporarily unavailable'
+    };
+  }
+}
+```
+
+## Fail Open vs Fail Closed
+
+### Fail Open (Recommended)
+
+Allow requests when rate limiting fails:
+
+```typescript
+async function checkLimitSafely(userId: string) {
+  try {
+    const result = await checkLimit(userId);
+    return result;
+  } catch (error) {
+    // Log the error for monitoring
+    console.error('Rate limit service unavailable:', error);
+    
+    // Fail open - allow the request
+    return {
+      allowed: true,
+      error: 'Rate limit service unavailable'
+    };
+  }
+}
+```
+
+**When to use**: Most production scenarios where availability is more important than strict rate limiting.
+
+### Fail Closed
+
+Reject requests when rate limiting fails:
+
+```typescript
+async function checkLimitStrict(userId: string) {
+  try {
+    const result = await checkLimit(userId);
+    return result;
+  } catch (error) {
+    // Log the error
+    console.error('Rate limit service unavailable:', error);
+    
+    // Fail closed - reject the request
+    throw new Error('Rate limiting service unavailable. Please try again later.');
+  }
+}
+```
+
+**When to use**: When strict rate limiting is critical and you prefer to reject requests rather than allow them.
+
+## Error Types
+
+### Redis Connection Errors
+
+Handle Redis connection failures:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+async function handleRequest(userId: string) {
+  try {
+    const result = await checkLimit(userId);
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      // Check for connection errors
+      if (error.message.includes('ECONNREFUSED')) {
+        console.error('Redis connection refused. Is Redis running?');
+        // Fail open or alert
+      } else if (error.message.includes('ETIMEDOUT')) {
+        console.error('Redis connection timeout');
+        // Fail open or retry
+      } else if (error.message.includes('NOAUTH')) {
+        console.error('Redis authentication failed');
+        // Check credentials
+      }
+    }
+    
+    // Default: fail open
+    return { allowed: true, error: 'Rate limit unavailable' };
+  }
+}
+```
+
+### Timeout Errors
+
+Handle timeout errors:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+// Set a shorter timeout for faster failure detection
+const client = createClient({
+  serviceId: 'my-api',
+  timeout: 2000  // 2 seconds
+});
+
+async function checkWithTimeout(userId: string) {
+  try {
+    const result = await client.checkRateLimit({ identifier: userId });
+    return result;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.warn('Rate limit check timed out');
+      // Fail open or use cached result
+      return { allowed: true, timeout: true };
+    }
+    throw error;
+  }
+}
+```
+
+## Retry Logic
+
+Implement retry logic for transient errors:
+
+```typescript
+async function checkLimitWithRetry(
+  userId: string,
+  maxRetries: number = 3
+): Promise<any> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await checkLimit(userId);
+      return result;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Don't retry on certain errors
+      if (lastError.message.includes('NOAUTH')) {
+        throw lastError; // Don't retry auth errors
+      }
+      
+      // Exponential backoff
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 100; // 200ms, 400ms, 800ms
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  // All retries failed - fail open
+  console.error('Rate limit check failed after retries:', lastError);
+  return { allowed: true, error: 'Rate limit unavailable' };
+}
+```
+
+## Circuit Breaker Pattern
+
+Implement a circuit breaker to prevent cascading failures:
+
+```typescript
+class RateLimitCircuitBreaker {
+  private failures = 0;
+  private lastFailureTime = 0;
+  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  
+  private readonly threshold = 5;
+  private readonly timeout = 60000; // 1 minute
+  
+  async check(userId: string): Promise<any> {
+    if (this.state === 'open') {
+      if (Date.now() - this.lastFailureTime > this.timeout) {
+        this.state = 'half-open';
+      } else {
+        // Circuit is open - fail open
+        return { allowed: true, circuitOpen: true };
+      }
+    }
+    
+    try {
+      const result = await checkLimit(userId);
+      
+      // Success - reset failures
+      if (this.state === 'half-open') {
+        this.state = 'closed';
+        this.failures = 0;
+      }
+      
+      return result;
+    } catch (error) {
+      this.failures++;
+      this.lastFailureTime = Date.now();
+      
+      if (this.failures >= this.threshold) {
+        this.state = 'open';
+      }
+      
+      // Fail open
+      return { allowed: true, error: 'Rate limit unavailable' };
+    }
+  }
+}
+
+// Usage
+const circuitBreaker = new RateLimitCircuitBreaker();
+const result = await circuitBreaker.check('user-123');
+```
+
+## Logging and Monitoring
+
+Log errors for monitoring and alerting:
+
+```typescript
+import { rateLimit } from 'limitly-sdk';
+
+const checkLimit = rateLimit();
+
+async function checkLimitWithLogging(userId: string) {
+  try {
+    const result = await checkLimit(userId);
+    
+    // Log rate limit violations
+    if (!result.allowed) {
+      console.warn('Rate limit exceeded', {
+        userId,
         limit: result.limit,
         remaining: result.remaining,
         reset: result.reset
       });
     }
-
-    // Process request
-    return res.json({ success: true });
+    
+    return result;
   } catch (error) {
-    // Handle network errors
-    if (error instanceof Error) {
-      console.error('Rate limit check failed:', error.message);
-    }
-    // On error, allow request (graceful degradation)
-    return res.json({ success: true });
+    // Log errors for monitoring
+    console.error('Rate limit error', {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    // Send to monitoring service (e.g., Sentry, Datadog)
+    // monitor.captureException(error);
+    
+    // Fail open
+    return { allowed: true, error: 'Rate limit unavailable' };
   }
 }
 ```
+
+## HTTP Error Responses
+
+Return proper HTTP error responses:
+
+```typescript
+// Next.js App Router
+import { rateLimit } from 'limitly-sdk';
+import { NextResponse } from 'next/server';
+
+const checkLimit = rateLimit();
+
+export async function GET(request: Request) {
+  try {
+    const userId = request.headers.get('x-user-id') || 'anonymous';
+    const result = await checkLimit(userId);
+    
+    const headers = new Headers();
+    if (result.limit) headers.set('X-RateLimit-Limit', result.limit.toString());
+    if (result.remaining !== undefined) {
+      headers.set('X-RateLimit-Remaining', result.remaining.toString());
+    }
+    
+    if (!result.allowed) {
+      const retryAfter = result.reset 
+        ? Math.ceil((result.reset - Date.now()) / 1000) 
+        : 60;
+      headers.set('Retry-After', retryAfter.toString());
+      
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: 'Too many requests. Please try again later.',
+          retryAfter
+        },
+        { status: 429, headers }
+      );
+    }
+    
+    return NextResponse.json({ success: true }, { headers });
+  } catch (error) {
+    // Log error
+    console.error('Rate limit check failed:', error);
+    
+    // Return 503 Service Unavailable
+    return NextResponse.json(
+      {
+        error: 'Service temporarily unavailable',
+        message: 'Rate limiting service is currently unavailable. Please try again later.'
+      },
+      { status: 503 }
+    );
+  }
+}
+```
+
+## Best Practices
+
+1. **Always use try-catch**: Wrap rate limit checks in try-catch blocks
+2. **Fail open in production**: Allow requests when rate limiting fails
+3. **Log errors**: Log all errors for monitoring and debugging
+4. **Set timeouts**: Use appropriate timeouts to prevent hanging requests
+5. **Monitor**: Set up alerts for rate limit service failures
+6. **Graceful degradation**: Have fallback behavior when rate limiting is unavailable
+
+## Next Steps
+
+- 📚 [Basic Examples](../examples/basic) - More error handling patterns
+- 🚀 [Advanced Examples](../examples/advanced) - Complex error scenarios
+- 🔧 [API Reference](../api-reference/checkratelimit) - Complete API docs
