@@ -8,7 +8,8 @@ class RegistryRedisClient {
 
   constructor() {
     this.redisClient = redis.createClient({
-      url: envConfig.REGISTRY_REDIS_URL,
+      url: envConfig.REDIS_URL,
+      database: envConfig.REDIS_REGISTRY_DB,
     });
     this.isConnected = false;
     this.connecting = false;

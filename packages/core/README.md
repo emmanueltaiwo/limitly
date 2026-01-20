@@ -116,7 +116,7 @@ Accepts batched analytics events from the SDK when users provide their own Redis
 
 ## Service Registry
 
-Limitly maintains a service registry to prevent serviceId collisions when users don't provide their own Redis URL. The registry uses a separate Redis instance (configurable via `REGISTRY_REDIS_URL`).
+Limitly maintains a service registry to prevent serviceId collisions when users don't provide their own Redis URL. The registry uses a separate Redis database (configurable via `REDIS_REGISTRY_DB`, defaults to DB 1).
 
 **How it works:**
 - When a user provides `X-Service-Password` header, the serviceId is registered with the password hash
@@ -125,7 +125,7 @@ Limitly maintains a service registry to prevent serviceId collisions when users 
 - Registry entries expire after 30 days of inactivity
 
 **Environment Variables:**
-- `REGISTRY_REDIS_URL`: Redis connection URL for registry (defaults to `REDIS_URL/1` if not provided)
+- `REDIS_REGISTRY_DB`: Redis database number for registry (default: 1)
 
 ## Rate Limiting Algorithm
 
@@ -193,7 +193,7 @@ This package includes a Dockerfile for deployment on Railway.
 3. **Set environment variables:**
    - `PORT`: Railway will set this automatically
    - `REDIS_URL`: Your Redis connection string (from Railway Redis addon)
-   - `REGISTRY_REDIS_URL`: Registry Redis connection string (optional, defaults to `REDIS_URL/1`)
+   - `REDIS_REGISTRY_DB`: Redis database number for registry (optional, defaults to 1)
    - `NODE_ENV`: `production`
 
 4. **Deploy:** Railway will automatically build and deploy
