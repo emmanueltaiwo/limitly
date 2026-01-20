@@ -1,11 +1,15 @@
 import { RedisClient } from './redis-client.js';
 import { RateLimiter } from './rate-limiter.js';
 import { Analytics } from './analytics.js';
+import { PostHogClient } from './posthog-client.js';
+import type { PostHogConfig } from './posthog-client.js';
 
 /**
  * limitly-sdk
  * Type-safe rate limiting SDK for Node.js and browsers
  */
+
+export type { PostHogConfig };
 
 /**
  * Configuration options for creating a Limitly client
@@ -21,6 +25,8 @@ export interface LimitlyConfig {
   redisUrl?: string;
   /** Enable system analytics tracking (default: true) */
   enableSystemAnalytics?: boolean;
+  /** PostHog configuration for sending events to your PostHog instance */
+  posthog?: PostHogConfig;
 }
 
 /**
@@ -90,12 +96,22 @@ export class LimitlyClient {
   private readonly redisClient?: RedisClient;
   private readonly rateLimiter?: RateLimiter;
   private readonly analytics: Analytics;
+  private readonly posthogClient?: PostHogClient;
 
   constructor(config: LimitlyConfig = {}) {
     this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
     this.timeout = config.timeout ?? 5000;
-    this.analytics = new Analytics(this.baseUrl, config.enableSystemAnalytics !== false);
+    
+    if (config.posthog) {
+      this.posthogClient = new PostHogClient(config.posthog);
+    }
+    
+    this.analytics = new Analytics(
+      this.baseUrl,
+      config.enableSystemAnalytics !== false,
+      this.posthogClient
+    );
     
     if (config.redisUrl) {
       this.useRedis = true;
@@ -105,6 +121,10 @@ export class LimitlyClient {
     } else {
       this.useRedis = false;
     }
+  }
+
+  async shutdown(): Promise<void> {
+    await this.analytics.shutdown();
   }
 
   private async request(

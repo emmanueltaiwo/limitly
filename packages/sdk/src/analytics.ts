@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import type { PostHogClient } from './posthog-client.js';
 
 const ANALYTICS_TOKEN = 'limitly-analytics';
 const SDK_VERSION = '1.2.0';
@@ -16,14 +17,16 @@ function hashIdentifier(value: string): string {
 export class Analytics {
   private readonly baseUrl: string;
   private readonly enabled: boolean;
+  private readonly posthogClient?: PostHogClient;
   private eventQueue: AnalyticsEvent[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private readonly flushInterval = 5000;
   private readonly batchSize = 10;
 
-  constructor(baseUrl: string, enabled: boolean = true) {
+  constructor(baseUrl: string, enabled: boolean = true, posthogClient?: PostHogClient) {
     this.baseUrl = baseUrl;
     this.enabled = enabled;
+    this.posthogClient = posthogClient;
   }
 
   trackRateLimitCheck(
@@ -37,7 +40,7 @@ export class Analytics {
     customCapacity?: number,
     customRefillRate?: number
   ): void {
-    if (!this.enabled) return;
+    if (!this.enabled && !this.posthogClient) return;
 
     const serviceIdHash = hashIdentifier(serviceId);
     const clientIdHash = hashIdentifier(clientId);
@@ -61,30 +64,66 @@ export class Analytics {
       properties.custom_refill_rate = customRefillRate;
     }
 
-    this.eventQueue.push({
-      event: 'rate_limit_check',
-      distinct_id: distinctId,
-      properties,
-    });
+    if (this.posthogClient) {
+      this.posthogClient.capture({
+        distinctId: clientId,
+        event: 'rate_limit_check',
+        properties: {
+          service_id: serviceId,
+          client_id: clientId,
+          allowed,
+          remaining,
+          limit,
+          reset,
+          has_custom_config: hasCustomConfig,
+          custom_capacity: customCapacity,
+          custom_refill_rate: customRefillRate,
+          sdk_version: SDK_VERSION,
+        },
+      });
+      this.posthogClient.capture({
+        distinctId: clientId,
+        event: allowed ? 'rate_limit_allowed' : 'rate_limit_denied',
+        properties: {
+          service_id: serviceId,
+          client_id: clientId,
+          remaining,
+          limit,
+          reset,
+          has_custom_config: hasCustomConfig,
+          sdk_version: SDK_VERSION,
+        },
+      });
+    }
 
-    this.eventQueue.push({
-      event: allowed ? 'rate_limit_allowed' : 'rate_limit_denied',
-      distinct_id: distinctId,
-      properties: {
-        service_id_hash: serviceIdHash,
-        client_id_hash: clientIdHash,
-        remaining,
-        limit,
-        reset,
-        has_custom_config: hasCustomConfig,
-        sdk_version: SDK_VERSION,
-      },
-    });
+    if (this.enabled) {
+      this.eventQueue.push({
+        event: 'rate_limit_check',
+        distinct_id: distinctId,
+        properties,
+      });
 
-    if (this.eventQueue.length >= this.batchSize) {
-      this.flush();
-    } else if (!this.flushTimer) {
-      this.flushTimer = setTimeout(() => this.flush(), this.flushInterval);
+      this.eventQueue.push({
+        event: allowed ? 'rate_limit_allowed' : 'rate_limit_denied',
+        distinct_id: distinctId,
+        properties: {
+          service_id_hash: serviceIdHash,
+          client_id_hash: clientIdHash,
+          remaining,
+          limit,
+          reset,
+          has_custom_config: hasCustomConfig,
+          sdk_version: SDK_VERSION,
+        },
+      });
+    }
+
+    if (this.enabled) {
+      if (this.eventQueue.length >= this.batchSize) {
+        this.flush();
+      } else if (!this.flushTimer) {
+        this.flushTimer = setTimeout(() => this.flush(), this.flushInterval);
+      }
     }
   }
 
@@ -124,5 +163,8 @@ export class Analytics {
       this.flushTimer = null;
     }
     await this.flush();
+    if (this.posthogClient) {
+      await this.posthogClient.shutdown();
+    }
   }
 }

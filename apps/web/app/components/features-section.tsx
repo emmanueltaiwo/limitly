@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Zap, Lock, Settings, Gauge, Shield, ChevronRight } from "lucide-react";
+import { Zap, Lock, Settings, Gauge, Shield, ChevronRight, BarChart } from "lucide-react";
 
 export function FeaturesSection() {
   const features = [
@@ -40,6 +40,12 @@ export function FeaturesSection() {
       title: "Dynamic Config",
       description: "Set limits per request without redeployment. Adjust on the fly.",
       gradient: "from-rose-500/20 to-red-500/10",
+    },
+    {
+      icon: BarChart,
+      title: "PostHog Analytics",
+      description: "Optional PostHog integration to track rate limit events in your own analytics dashboard.",
+      gradient: "from-teal-500/20 to-cyan-500/10",
     },
   ];
 

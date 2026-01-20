@@ -20,12 +20,18 @@ function createClient(config?: LimitlyConfig): LimitlyClient
 Configuration object for the client:
 
 ```typescript
+interface PostHogConfig {
+  apiKey: string;          // PostHog API key
+  host?: string;           // PostHog host (default: https://app.posthog.com)
+}
+
 interface LimitlyConfig {
   redisUrl?: string;       // ⭐ Recommended for production. Redis connection URL for direct Redis mode
   serviceId?: string;      // Service identifier for isolation
   timeout?: number;        // Request timeout in milliseconds (default: 5000)
   baseUrl?: string;        // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when redisUrl is not provided.
   enableSystemAnalytics?: boolean;  // Enable system analytics tracking (default: true). All identifiers are hashed for privacy.
+  posthog?: PostHogConfig; // PostHog configuration to send events to your PostHog instance
 }
 ```
 
@@ -123,6 +129,33 @@ const result = await client.checkRateLimit('user-123');
 - ✅ Works out of the box with zero configuration
 - ✅ Good for development and testing
 
+## PostHog Analytics Integration
+
+Send rate limit events directly to your PostHog instance:
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'my-app',
+  posthog: {
+    apiKey: process.env.POSTHOG_API_KEY!,
+    host: 'https://app.posthog.com' // optional
+  }
+});
+```
+
+**How it works:**
+- Events are sent to your PostHog with actual identifiers (serviceId, clientId)
+- Events are also sent to Limitly's analytics endpoint (if enabled) with hashed identifiers
+- Both happen asynchronously and failures don't affect rate limiting
+- Tracked events: `rate_limit_check`, `rate_limit_allowed`, `rate_limit_denied`
+
+**Benefits:**
+- Track your own analytics in PostHog
+- See actual user IDs (not hashed)
+- Build custom dashboards and insights
+- Works with direct Redis mode
+
 ## Custom Timeout
 
 Set a custom timeout for HTTP requests:
@@ -153,10 +186,12 @@ const client = createClient({
 ```
 
 **Privacy:**
-- All identifiers (service IDs, client IDs) are hashed before sending
+- All identifiers (service IDs, client IDs) are hashed before sending to Limitly
 - No sensitive data (Redis URLs, IP addresses) is collected
 - Analytics are sent asynchronously and failures don't affect rate limiting
 - Analytics only track when using direct Redis mode (with `redisUrl`)
+
+**Note:** If you provide `posthog` config, events are sent to your PostHog with actual identifiers (not hashed) for your own analytics. Limitly's system analytics (if enabled) still uses hashed identifiers.
 
 **What's tracked:**
 - Rate limit check events (allowed/denied)
@@ -165,7 +200,7 @@ const client = createClient({
 - Custom configuration usage
 
 **What's NOT tracked:**
-- Raw identifiers or user data
+- Raw identifiers or user data (in system analytics - hashed only)
 - Redis connection strings
 - IP addresses
 - Sensitive application data
