@@ -27,6 +27,7 @@ Configuration for creating a Limitly client:
 ```typescript
 interface LimitlyConfig {
   serviceId?: string;      // Service identifier for isolation
+  servicePassword?: string;  // Password for collision detection (only used when redisUrl is not provided)
   redisUrl?: string;       // Redis connection URL
   timeout?: number;        // Request timeout in milliseconds
   baseUrl?: string;        // Base URL of the Limitly API service

@@ -45,12 +45,14 @@ async function handler(req, res) {
 }
 ```
 
-**Without Redis URL (development/testing):**
+**Without Redis URL (use servicePassword to prevent collisions):**
 
 ```typescript
-// ⚠️ Note: Without redisUrl, you share the hosted Redis with other users
-// If multiple users use the same serviceId, they may experience collisions
-const client = createClient({ serviceId: 'my-app' });
+// Use servicePassword to prevent collisions with other users
+const client = createClient({
+  serviceId: 'my-app',
+  servicePassword: 'your-secret-password'
+});
 ```
 
 **Why bring your own Redis?**

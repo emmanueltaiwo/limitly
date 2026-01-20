@@ -53,6 +53,7 @@ Returns service health status and Redis connection state.
 GET /api/rate-limit
 Headers:
   X-Service-Id: service-identifier (optional, prevents cross-site collisions)
+  X-Service-Password: password (optional, prevents serviceId collisions)
   X-Client-Id: user-identifier (optional, falls back to IP)
   X-Rate-Limit-Capacity: number (optional, dynamic capacity)
   X-Rate-Limit-Refill: number (optional, dynamic refill rate)
@@ -104,7 +105,7 @@ Body:
         "remaining": 95,
         "limit": 100,
         "reset": 1234567890000,
-        "sdk_version": "1.2.0"
+        "sdk_version": "1.3.0"
       }
     }
   ]
@@ -112,6 +113,19 @@ Body:
 ```
 
 Accepts batched analytics events from the SDK when users provide their own Redis URL. Events are forwarded to PostHog for usage analytics. All identifiers are hashed for privacy. Rate limited to 100 requests per 10 seconds per IP.
+
+## Service Registry
+
+Limitly maintains a service registry to prevent serviceId collisions when users don't provide their own Redis URL. The registry uses a separate Redis instance (configurable via `REGISTRY_REDIS_URL`).
+
+**How it works:**
+- When a user provides `X-Service-Password` header, the serviceId is registered with the password hash
+- Subsequent requests must provide the same password
+- Password mismatches are logged as warnings (requests still allowed)
+- Registry entries expire after 30 days of inactivity
+
+**Environment Variables:**
+- `REGISTRY_REDIS_URL`: Redis connection URL for registry (defaults to `REDIS_URL/1` if not provided)
 
 ## Rate Limiting Algorithm
 
@@ -179,6 +193,7 @@ This package includes a Dockerfile for deployment on Railway.
 3. **Set environment variables:**
    - `PORT`: Railway will set this automatically
    - `REDIS_URL`: Your Redis connection string (from Railway Redis addon)
+   - `REGISTRY_REDIS_URL`: Registry Redis connection string (optional, defaults to `REDIS_URL/1`)
    - `NODE_ENV`: `production`
 
 4. **Deploy:** Railway will automatically build and deploy

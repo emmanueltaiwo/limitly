@@ -10,6 +10,11 @@ export {
   trackRateLimitCheck,
   trackServiceRequest,
   trackRateLimitResult,
+  trackServiceRegistered,
+  trackServicePasswordValidated,
+  trackServicePasswordMismatch,
+  trackServiceUsedWithoutPassword,
   type RateLimitCheckProperties,
   type ServiceRequestProperties,
+  type ServiceRegistryProperties,
 } from './events.js';

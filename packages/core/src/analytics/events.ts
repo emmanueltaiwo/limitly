@@ -9,6 +9,10 @@ export const AnalyticsEvents = {
   RATE_LIMIT_ALLOWED: 'rate_limit_allowed',
   RATE_LIMIT_DENIED: 'rate_limit_denied',
   SERVICE_REQUEST: 'service_request',
+  SERVICE_REGISTERED: 'service_registered',
+  SERVICE_PASSWORD_VALIDATED: 'service_password_validated',
+  SERVICE_PASSWORD_MISMATCH: 'service_password_mismatch',
+  SERVICE_USED_WITHOUT_PASSWORD: 'service_used_without_password',
 } as const;
 
 /**
@@ -143,4 +147,107 @@ export function trackRateLimitResult(
     customRefillRate: options?.customRefillRate,
     ipAddress: options?.ipAddress,
   });
+}
+
+/**
+ * Properties for service registry events
+ */
+export interface ServiceRegistryProperties {
+  serviceId: string;
+  ipAddress?: string;
+  registeredAt?: number;
+}
+
+/**
+ * Track service registration event
+ */
+export function trackServiceRegistered(
+  properties: ServiceRegistryProperties
+): void {
+  const posthog = getPostHog();
+  if (!posthog) return;
+
+  try {
+    posthog.capture({
+      distinctId: properties.serviceId,
+      event: AnalyticsEvents.SERVICE_REGISTERED,
+      properties: {
+        service_id: properties.serviceId,
+        ip_address: properties.ipAddress,
+        registered_at: properties.registeredAt,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track service registered:', error);
+  }
+}
+
+/**
+ * Track service password validation event
+ */
+export function trackServicePasswordValidated(
+  properties: ServiceRegistryProperties
+): void {
+  const posthog = getPostHog();
+  if (!posthog) return;
+
+  try {
+    posthog.capture({
+      distinctId: properties.serviceId,
+      event: AnalyticsEvents.SERVICE_PASSWORD_VALIDATED,
+      properties: {
+        service_id: properties.serviceId,
+        ip_address: properties.ipAddress,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track service password validated:', error);
+  }
+}
+
+/**
+ * Track service password mismatch event
+ */
+export function trackServicePasswordMismatch(
+  properties: ServiceRegistryProperties
+): void {
+  const posthog = getPostHog();
+  if (!posthog) return;
+
+  try {
+    posthog.capture({
+      distinctId: properties.serviceId,
+      event: AnalyticsEvents.SERVICE_PASSWORD_MISMATCH,
+      properties: {
+        service_id: properties.serviceId,
+        ip_address: properties.ipAddress,
+        registered_at: properties.registeredAt,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track service password mismatch:', error);
+  }
+}
+
+/**
+ * Track service used without password event
+ */
+export function trackServiceUsedWithoutPassword(
+  properties: ServiceRegistryProperties
+): void {
+  const posthog = getPostHog();
+  if (!posthog) return;
+
+  try {
+    posthog.capture({
+      distinctId: properties.serviceId,
+      event: AnalyticsEvents.SERVICE_USED_WITHOUT_PASSWORD,
+      properties: {
+        service_id: properties.serviceId,
+        ip_address: properties.ipAddress,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track service used without password:', error);
+  }
 }

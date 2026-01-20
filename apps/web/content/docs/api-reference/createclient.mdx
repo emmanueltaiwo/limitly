@@ -23,6 +23,7 @@ Configuration object for the client:
 interface LimitlyConfig {
   redisUrl?: string;       // ⭐ Recommended for production. Redis connection URL for direct Redis mode
   serviceId?: string;      // Service identifier for isolation
+  servicePassword?: string;  // Password for collision detection (only used when redisUrl is not provided)
   timeout?: number;        // Request timeout in milliseconds (default: 5000)
   baseUrl?: string;        // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when redisUrl is not provided.
   enableSystemAnalytics?: boolean;  // Enable system analytics tracking (default: true). All identifiers are hashed for privacy.
@@ -31,7 +32,7 @@ interface LimitlyConfig {
 
 **Important:**
 - **With `redisUrl`**: SDK connects directly to your Redis. Full tenant isolation, no collisions with other users. **Recommended for production.**
-- **Without `redisUrl`**: Uses HTTP API mode (hosted service). Shares Redis with other users - may collide if multiple users use the same `serviceId`. Good for development/testing.
+- **Without `redisUrl`**: Uses HTTP API mode (hosted service). Use `servicePassword` to prevent collisions with other users using the same `serviceId`.
 
 ## Returns
 
@@ -54,11 +55,13 @@ const client = createClient({
 });
 ```
 
-**Without Redis URL (development/testing):**
+**Without Redis URL (use servicePassword to prevent collisions):**
 
 ```typescript
-// ⚠️ Shares hosted Redis - may collide with other users
-const client = createClient({ serviceId: 'my-app' });
+const client = createClient({
+  serviceId: 'my-app',
+  servicePassword: 'your-secret-password'
+});
 ```
 
 ## Custom Service ID
@@ -122,6 +125,30 @@ const result = await client.checkRateLimit('user-123');
 - ⚠️ Potential collisions if multiple users use the same `serviceId`
 - ✅ Works out of the box with zero configuration
 - ✅ Good for development and testing
+
+## Service Password (Collision Prevention)
+
+When using HTTP API mode (without `redisUrl`), use `servicePassword` to prevent collisions with other users:
+
+```typescript
+const client = createClient({
+  serviceId: 'my-app',
+  servicePassword: 'your-secret-password'
+});
+```
+
+**How it works:**
+- First user to use a `serviceId` with a password "claims" it
+- Subsequent users must provide the same password
+- Password mismatch triggers a warning (request still allowed)
+- Passwords are hashed and stored securely
+
+**Benefits:**
+- Prevents accidental collisions with other users
+- No need for unique serviceIds
+- Works seamlessly with HTTP API mode
+
+**Note:** If you provide `redisUrl`, `servicePassword` is ignored (not needed since you own your Redis).
 
 ## Custom Timeout
 

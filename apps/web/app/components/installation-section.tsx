@@ -44,8 +44,11 @@ const client = createClient({
   serviceId: 'my-app'
 });
 
-// Without redisUrl (shares hosted Redis - may collide with other users)
-// const client = createClient({ serviceId: 'my-app' });`,
+// Without redisUrl: Use servicePassword to prevent collisions
+const client = createClient({
+  serviceId: 'my-app',
+  servicePassword: 'your-secret-password'
+});`,
       language: "typescript",
       id: "init",
     },
