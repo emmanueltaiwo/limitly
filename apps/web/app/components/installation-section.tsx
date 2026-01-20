@@ -38,10 +38,13 @@ export function InstallationSection() {
       description: "Initialize the rate limiting client (recommended: use your own Redis)",
       code: `import { createClient } from 'limitly-sdk';
 
-// Recommended: Use your own Redis for full tenant isolation
+// Recommended: Use your own Redis + PostHog for analytics
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-app'
+  serviceId: 'my-app',
+  posthog: {
+    apiKey: process.env.POSTHOG_API_KEY!,
+  }
 });
 
 // Without redisUrl (shares hosted Redis - may collide with other users)

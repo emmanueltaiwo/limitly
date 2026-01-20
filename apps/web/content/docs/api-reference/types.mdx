@@ -25,12 +25,18 @@ import type {
 Configuration for creating a Limitly client:
 
 ```typescript
+interface PostHogConfig {
+  apiKey: string;          // PostHog API key
+  host?: string;           // PostHog host (default: https://app.posthog.com)
+}
+
 interface LimitlyConfig {
   serviceId?: string;      // Service identifier for isolation
   redisUrl?: string;       // Redis connection URL
   timeout?: number;        // Request timeout in milliseconds
   baseUrl?: string;        // Base URL of the Limitly API service
   enableSystemAnalytics?: boolean;  // Enable system analytics tracking (default: true)
+  posthog?: PostHogConfig; // PostHog configuration to send events to your PostHog instance
 }
 ```
 

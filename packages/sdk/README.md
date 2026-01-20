@@ -141,6 +141,38 @@ const result = await client.checkRateLimit({
 });
 ```
 
+### 5. PostHog Analytics Integration
+
+Send rate limit events directly to your PostHog instance:
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'my-app',
+  posthog: {
+    apiKey: process.env.POSTHOG_API_KEY!,
+    host: 'https://app.posthog.com' // optional
+  }
+});
+
+// Events are automatically sent to your PostHog with actual identifiers
+const result = await client.checkRateLimit('user-123');
+```
+
+**How it works:**
+- Events are sent to your PostHog instance with actual `serviceId` and `clientId` (not hashed)
+- Events are also sent to Limitly's analytics endpoint (if `enableSystemAnalytics` is true) with hashed identifiers
+- Both happen asynchronously and failures don't affect rate limiting
+- Events tracked: `rate_limit_check`, `rate_limit_allowed`, `rate_limit_denied`
+
+**Benefits:**
+- Track your own analytics in PostHog
+- See actual user IDs and service IDs (not hashed)
+- Build custom dashboards and insights
+- Works with direct Redis mode (when using `redisUrl`)
+
 ### 6. Express.js Middleware
 
 ```typescript
@@ -184,6 +216,9 @@ Creates a new Limitly client instance.
 - `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when `redisUrl` is not provided.
 - `timeout` (number, optional): Request timeout in ms (default: 5000)
 - `enableSystemAnalytics` (boolean, optional): Enable system analytics tracking (default: true). When enabled, usage metrics are sent to Limitly for service improvement. All identifiers are hashed for privacy.
+- `posthog` (object, optional): PostHog configuration to send events directly to your PostHog instance. Events include actual identifiers (not hashed) for your analytics.
+  - `apiKey` (string, required): Your PostHog API key
+  - `host` (string, optional): PostHog host (default: https://app.posthog.com)
 
 **Example with Redis (recommended):**
 ```typescript
@@ -321,7 +356,10 @@ import type { LimitlyConfig, LimitlyResponse } from 'limitly-sdk';
 const config: LimitlyConfig = {
   serviceId: 'my-app',
   redisUrl: 'redis://localhost:6379',
-  timeout: 5000
+  timeout: 5000,
+  posthog: {
+    apiKey: process.env.POSTHOG_API_KEY!,
+  }
 };
 
 const client = createClient(config);
