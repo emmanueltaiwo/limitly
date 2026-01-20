@@ -15,6 +15,8 @@ export interface LimitlyConfig {
   baseUrl?: string;
   /** Service identifier for rate limit isolation */
   serviceId?: string;
+  /** Service password for collision detection (optional, only used when redisUrl is not provided) */
+  servicePassword?: string;
   /** Request timeout in milliseconds (default: 5000) */
   timeout?: number;
   /** Redis URL for direct Redis connection (optional, uses HTTP API if not provided) */
@@ -85,6 +87,7 @@ export interface RateLimitOptions {
 export class LimitlyClient {
   private readonly baseUrl: string;
   private readonly defaultServiceId?: string;
+  private readonly servicePassword?: string;
   private readonly timeout: number;
   private readonly useRedis: boolean;
   private readonly redisClient?: RedisClient;
@@ -94,6 +97,7 @@ export class LimitlyClient {
   constructor(config: LimitlyConfig = {}) {
     this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
+    this.servicePassword = config.servicePassword;
     this.timeout = config.timeout ?? 5000;
     this.analytics = new Analytics(this.baseUrl, config.enableSystemAnalytics !== false);
     
@@ -219,6 +223,10 @@ export class LimitlyClient {
       const serviceId = opts.serviceId ?? this.defaultServiceId;
       if (serviceId) {
         headers['X-Service-Id'] = serviceId;
+      }
+
+      if (this.servicePassword) {
+        headers['X-Service-Password'] = this.servicePassword;
       }
 
       if (typeof opts.capacity === 'number' && opts.capacity > 0) {

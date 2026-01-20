@@ -51,12 +51,14 @@ export async function GET(request: Request) {
 }
 ```
 
-**Without Redis URL (uses hosted service):**
+**Without Redis URL (use servicePassword to prevent collisions):**
 
 ```typescript
-// ⚠️ Note: Without redisUrl, you share Redis with other users
-// If multiple users use the same serviceId, they may collide
-const client = createClient({ serviceId: 'my-app' });
+// Use servicePassword to prevent collisions with other users
+const client = createClient({
+  serviceId: 'my-app',
+  servicePassword: 'your-secret-password'
+});
 ```
 
 ## Features
@@ -85,8 +87,8 @@ const result = await client.checkRateLimit('user-123');
 - ✅ **Production ready** - Recommended for production deployments
 
 **Without `redisUrl` (HTTP API mode):**
-- ⚠️ Shares hosted Redis with other users
-- ⚠️ Potential collisions if multiple users use the same `serviceId`
+- Use `servicePassword` to prevent collisions with other users
+- Shares hosted Redis with other users (if no password provided)
 - ✅ Works out of the box with zero configuration
 - ✅ Good for development and testing
 
@@ -181,6 +183,7 @@ Creates a new Limitly client instance.
 **Config options:**
 - `redisUrl` (string, optional): **Recommended for production.** Redis connection URL for direct Redis mode. If provided, SDK connects directly to your Redis for full tenant isolation. If not provided, uses HTTP API mode (shares hosted Redis with other users).
 - `serviceId` (string, optional): Isolate rate limits per service
+- `servicePassword` (string, optional): Password for service ID collision detection. Only used when `redisUrl` is not provided. Prevents other users from using the same serviceId.
 - `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when `redisUrl` is not provided.
 - `timeout` (number, optional): Request timeout in ms (default: 5000)
 - `enableSystemAnalytics` (boolean, optional): Enable system analytics tracking (default: true). When enabled, usage metrics are sent to Limitly for service improvement. All identifiers are hashed for privacy.
@@ -193,11 +196,11 @@ const client = createClient({
 });
 ```
 
-**Example without Redis (development/testing):**
+**Example without Redis (use servicePassword to prevent collisions):**
 ```typescript
-// ⚠️ Shares hosted Redis - may collide with other users
 const client = createClient({
-  serviceId: 'my-app'
+  serviceId: 'my-app',
+  servicePassword: 'your-secret-password'
 });
 ```
 
