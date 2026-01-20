@@ -23,7 +23,7 @@ export function Footer() {
                 className="relative w-6 h-6"
               >
                 <Image
-                  src="/logo.png"
+                  src="/limitly-logo.png"
                   alt="Limitly Logo"
                   width={24}
                   height={24}
