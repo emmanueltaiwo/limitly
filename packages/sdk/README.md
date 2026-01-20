@@ -183,6 +183,7 @@ Creates a new Limitly client instance.
 - `serviceId` (string, optional): Isolate rate limits per service
 - `baseUrl` (string, optional): Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when `redisUrl` is not provided.
 - `timeout` (number, optional): Request timeout in ms (default: 5000)
+- `enableSystemAnalytics` (boolean, optional): Enable system analytics tracking (default: true). When enabled, usage metrics are sent to Limitly for service improvement. All identifiers are hashed for privacy.
 
 **Example with Redis (recommended):**
 ```typescript

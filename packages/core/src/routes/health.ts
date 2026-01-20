@@ -1,13 +1,8 @@
-import { redisClient } from '../config/redis.js';
-import { Request, Response } from 'express';
+import { Router } from 'express';
+import { getHealth } from '../controllers/health.js';
 
-export const healthRoutes = async (req: Request, res: Response) => {
-  const redisHealth = redisClient.isConnected;
-  if (!redisHealth) {
-    return res
-      .status(500)
-      .json({ status: 'error', message: 'Redis connection failed' });
-  }
+const router = Router();
 
-  res.json({ status: 'ok', redis: redisHealth ? 'connected' : 'disconnected' });
-};
+router.get('/', getHealth);
+
+export default router;

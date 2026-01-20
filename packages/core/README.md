@@ -84,6 +84,35 @@ Headers:
 - `X-RateLimit-Reset`: Unix timestamp in seconds when limit resets
 - `Retry-After`: Seconds until retry (on 429)
 
+### Analytics Endpoint
+
+```bash
+POST /api/analytics
+Headers:
+  X-Limitly-Analytics-Token: authentication-token
+  Content-Type: application/json
+Body:
+{
+  "events": [
+    {
+      "event": "rate_limit_check",
+      "distinct_id": "hashed-identifier",
+      "properties": {
+        "service_id_hash": "...",
+        "client_id_hash": "...",
+        "allowed": true,
+        "remaining": 95,
+        "limit": 100,
+        "reset": 1234567890000,
+        "sdk_version": "1.2.0"
+      }
+    }
+  ]
+}
+```
+
+Accepts batched analytics events from the SDK when users provide their own Redis URL. Events are forwarded to PostHog for usage analytics. All identifiers are hashed for privacy. Rate limited to 100 requests per 10 seconds per IP.
+
 ## Rate Limiting Algorithm
 
 Limitly uses the **Token Bucket** algorithm:

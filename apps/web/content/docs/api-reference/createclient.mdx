@@ -25,6 +25,7 @@ interface LimitlyConfig {
   serviceId?: string;      // Service identifier for isolation
   timeout?: number;        // Request timeout in milliseconds (default: 5000)
   baseUrl?: string;        // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when redisUrl is not provided.
+  enableSystemAnalytics?: boolean;  // Enable system analytics tracking (default: true). All identifiers are hashed for privacy.
 }
 ```
 
@@ -137,6 +138,37 @@ This is useful when:
 - You want faster failure detection
 - Your network has higher latency
 - You're using a remote API service
+
+## System Analytics
+
+Limitly collects anonymous usage analytics to improve the service. Analytics are enabled by default and can be disabled:
+
+```typescript
+// Disable analytics
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'my-app',
+  enableSystemAnalytics: false
+});
+```
+
+**Privacy:**
+- All identifiers (service IDs, client IDs) are hashed before sending
+- No sensitive data (Redis URLs, IP addresses) is collected
+- Analytics are sent asynchronously and failures don't affect rate limiting
+- Analytics only track when using direct Redis mode (with `redisUrl`)
+
+**What's tracked:**
+- Rate limit check events (allowed/denied)
+- Usage patterns (limits, remaining, reset times)
+- SDK version
+- Custom configuration usage
+
+**What's NOT tracked:**
+- Raw identifiers or user data
+- Redis connection strings
+- IP addresses
+- Sensitive application data
 
 ## Environment-Based Configuration
 

@@ -1,5 +1,6 @@
 import { RedisClient } from './redis-client.js';
 import { RateLimiter } from './rate-limiter.js';
+import { Analytics } from './analytics.js';
 
 /**
  * limitly-sdk
@@ -18,6 +19,8 @@ export interface LimitlyConfig {
   timeout?: number;
   /** Redis URL for direct Redis connection (optional, uses HTTP API if not provided) */
   redisUrl?: string;
+  /** Enable system analytics tracking (default: true) */
+  enableSystemAnalytics?: boolean;
 }
 
 /**
@@ -86,11 +89,13 @@ export class LimitlyClient {
   private readonly useRedis: boolean;
   private readonly redisClient?: RedisClient;
   private readonly rateLimiter?: RateLimiter;
+  private readonly analytics: Analytics;
 
   constructor(config: LimitlyConfig = {}) {
     this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
     this.timeout = config.timeout ?? 5000;
+    this.analytics = new Analytics(this.baseUrl, config.enableSystemAnalytics !== false);
     
     if (config.redisUrl) {
       this.useRedis = true;
@@ -168,6 +173,18 @@ export class LimitlyClient {
             : undefined;
 
         const result = await this.rateLimiter.check(serviceId, clientId, config);
+
+        this.analytics.trackRateLimitCheck(
+          serviceId,
+          clientId,
+          result.allowed,
+          result.remaining,
+          result.limit,
+          result.reset,
+          !!config,
+          config?.capacity,
+          config?.refillRate
+        );
 
         if (!result.allowed) {
           return {
