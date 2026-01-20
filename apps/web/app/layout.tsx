@@ -43,12 +43,21 @@ export const metadata: Metadata = {
     title: "Limitly - Free Rate Limiting SDK",
     description: "The best TypeScript-first rate limiting SDK. Free, fast, and fully type-safe.",
     siteName: "Limitly",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "Limitly - Free Rate Limiting SDK",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Limitly - Free Rate Limiting SDK",
     description: "The best TypeScript-first rate limiting SDK. Free, fast, and fully type-safe.",
     creator: "@ez0xai",
+    images: ["/og.png"],
   },
   robots: {
     index: true,

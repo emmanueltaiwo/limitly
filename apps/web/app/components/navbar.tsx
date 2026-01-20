@@ -40,16 +40,13 @@ export function Navbar({hideLinks = false}:Props) {
                 className="relative w-6 h-6 sm:w-8 sm:h-8"
               >
                 <Image
-                  src="/logo.png"
+                  src="/limitly-logo.png"
                   alt="Limitly Logo"
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
                   className="object-contain"
                 />
               </motion.div>
-              <span className="bg-linear-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-                Limitly
-              </span>
             </Link>
           </motion.div>
           
