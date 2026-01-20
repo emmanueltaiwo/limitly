@@ -10,6 +10,7 @@ interface EnvConfig {
   POSTHOG_API_KEY: string;
   POSTHOG_HOST: string;
   POSTHOG_ENABLED: boolean;
+  ANALYTICS_TOKEN: string;
 }
 
 export const envConfig: EnvConfig = {
@@ -19,4 +20,5 @@ export const envConfig: EnvConfig = {
   POSTHOG_API_KEY: process.env.POSTHOG_API_KEY || '',
   POSTHOG_HOST: process.env.POSTHOG_HOST || 'https://app.posthog.com',
   POSTHOG_ENABLED: process.env.POSTHOG_ENABLED !== 'false' && !!process.env.POSTHOG_API_KEY,
+  ANALYTICS_TOKEN: process.env.ANALYTICS_TOKEN || 'limitly-analytics',
 };

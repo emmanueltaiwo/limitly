@@ -29,6 +29,8 @@ interface LimitlyConfig {
   serviceId?: string;      // Service identifier for isolation
   redisUrl?: string;       // Redis connection URL
   timeout?: number;        // Request timeout in milliseconds
+  baseUrl?: string;        // Base URL of the Limitly API service
+  enableSystemAnalytics?: boolean;  // Enable system analytics tracking (default: true)
 }
 ```
 
