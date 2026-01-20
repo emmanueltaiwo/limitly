@@ -1,22 +1,19 @@
 import { RedisClient } from './redis-client.js';
 import { RateLimiter } from './rate-limiter.js';
 import { Analytics } from './analytics.js';
+import { PostHogClient } from './posthog-client.js';
+import type { PostHogConfig } from './posthog-client.js';
 
 /**
  * limitly-sdk
  * Type-safe rate limiting SDK for Node.js and browsers
  */
 
+export type { PostHogConfig };
+
 /**
  * Configuration options for creating a Limitly client
  */
-export interface PostHogConfig {
-  /** PostHog API key */
-  apiKey: string;
-  /** PostHog host (default: https://app.posthog.com) */
-  host?: string;
-}
-
 export interface LimitlyConfig {
   /** Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev) */
   baseUrl?: string;

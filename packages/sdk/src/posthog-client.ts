@@ -1,5 +1,9 @@
 import { PostHog } from 'posthog-node';
-import type { PostHogConfig } from './index.js';
+
+export interface PostHogConfig {
+  apiKey: string;
+  host?: string;
+}
 
 export class PostHogClient {
   private client: PostHog | null = null;
