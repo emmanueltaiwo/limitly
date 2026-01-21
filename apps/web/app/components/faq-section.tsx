@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
-import { ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronRight, HelpCircle } from "lucide-react";
 import { useState } from "react";
 
 interface FAQItem {
@@ -49,8 +49,17 @@ export function FAQSection() {
           transition={{ duration: 0.8 }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-8 tracking-tighter">
-            Frequently asked <span className="bg-linear-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent">questions</span>
+          <motion.div
+            className="inline-flex items-center justify-center mb-6"
+            initial={{ scale: 0, rotate: -180 }}
+            whileInView={{ scale: 1, rotate: 0 }}
+            viewport={{ once: true }}
+            transition={{ type: "spring", stiffness: 200 }}
+          >
+            <HelpCircle className="w-12 h-12 sm:w-16 sm:h-16 text-white/20" />
+          </motion.div>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-8 tracking-tighter">
+            Frequently asked <span className="bg-gradient-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent">questions</span>
           </h2>
         </motion.div>
 
@@ -66,40 +75,61 @@ export function FAQSection() {
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="group relative"
               >
-                <div className={`p-5 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl border ${isOpen ? 'border-white/30 bg-linear-to-br from-white/10 to-white/5' : 'border-white/10 bg-linear-to-br from-white/5 to-white/2'} backdrop-blur-xl hover:border-white/30 hover:bg-linear-to-br hover:from-white/10 hover:to-white/5 transition-all duration-500 cursor-pointer relative overflow-hidden`}>
+                <motion.div 
+                  className={`p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl border ${isOpen ? 'border-white/30 bg-gradient-to-br from-white/10 to-white/5' : 'border-white/10 bg-gradient-to-br from-white/5 to-white/2'} backdrop-blur-xl hover:border-white/30 transition-all duration-500 cursor-pointer relative overflow-hidden`}
+                  whileHover={{ scale: 1.01 }}
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
+                >
+                  {/* Animated background gradient */}
                   <motion.div
-                    className="absolute inset-0 bg-linear-to-r from-white/5 to-transparent"
-                    animate={{ opacity: isOpen ? 1 : 0 }}
+                    className="absolute inset-0 bg-gradient-to-r from-white/5 via-white/10 to-white/5"
+                    animate={{ opacity: isOpen ? 1 : 0, x: isOpen ? 0 : "-100%" }}
                     transition={{ duration: 0.5 }}
                   />
+                  
+                  {/* Shine effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+                    animate={{ x: isOpen ? ["-200%", "200%"] : "-200%" }}
+                    transition={{ duration: 2, repeat: isOpen ? Infinity : 0, delay: i * 0.2 }}
+                  />
+                  
                   <button
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
-                    className="flex items-start justify-between gap-4 sm:gap-6 font-bold text-base sm:text-lg lg:text-xl w-full text-left relative z-10"
+                    className="flex items-start justify-between gap-4 sm:gap-6 font-bold text-lg sm:text-xl lg:text-2xl w-full text-left relative z-10"
                   >
-                    <span className={`flex-1 ${isOpen ? 'text-white' : 'text-white/90'}`}>{item.q}</span>
+                    <span className={`flex-1 transition-colors ${isOpen ? 'text-white' : 'text-white/90 group-hover:text-white'}`}>
+                      {item.q}
+                    </span>
                     <motion.div
                       animate={{ rotate: isOpen ? 90 : 0 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="shrink-0"
+                      className="shrink-0 p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors"
                     >
                       <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                     </motion.div>
                   </button>
-                  <motion.div
-                    initial={false}
-                    animate={{
-                      height: isOpen ? "auto" : 0,
-                      opacity: isOpen ? 1 : 0,
-                      marginTop: isOpen ? 16 : 0,
-                    }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden relative z-10"
-                  >
-                    <p className="text-white/70 leading-relaxed text-sm sm:text-base lg:text-lg">
-                      {item.a}
-                    </p>
-                  </motion.div>
-                </div>
+                  
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden relative z-10"
+                      >
+                        <motion.p 
+                          className="text-white/70 leading-relaxed text-base sm:text-lg lg:text-xl mt-6 pt-6 border-t border-white/10"
+                          initial={{ y: -10 }}
+                          animate={{ y: 0 }}
+                          transition={{ delay: 0.1 }}
+                        >
+                          {item.a}
+                        </motion.p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               </motion.div>
             );
           })}
