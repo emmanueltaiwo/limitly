@@ -1,6 +1,6 @@
-import type React from "react";
+import type React from 'react';
 
-declare module "fumadocs-core/source" {
+declare module 'fumadocs-core/source' {
   export interface PageData {
     title: string;
     description?: string;
@@ -26,8 +26,5 @@ declare module "fumadocs-core/source" {
     getLanguages?(): string[];
   }
 
-  export function loader(config: {
-    baseUrl: string;
-    source: any;
-  }): Source;
+  export function loader(config: { baseUrl: string; source: any }): Source;
 }

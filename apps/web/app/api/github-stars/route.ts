@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const response = await fetch('https://api.github.com/repos/emmanueltaiwo/limitly', {
-      next: { revalidate: 3600 }, // Cache for 1 hour
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
+    const response = await fetch(
+      'https://api.github.com/repos/emmanueltaiwo/limitly',
+      {
+        next: { revalidate: 3600 }, // Cache for 1 hour
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error('Failed to fetch GitHub data');

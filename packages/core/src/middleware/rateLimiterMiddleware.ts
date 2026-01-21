@@ -4,15 +4,17 @@ import { trackRateLimitResult } from '../analytics/events.js';
 
 /**
  * Express middleware for rate limiting
- * 
+ *
  * @param limiter - Rate limiter instance
  * @returns Express middleware function
  */
 export const rateLimitMiddleware =
   (limiter: RateLimiter) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const serviceId = (req.headers['x-service-id'] as string | undefined) ?? 'default';
-    const clientId = (req.headers['x-client-id'] as string | undefined) ?? req.ip ?? 'unknown';
+    const serviceId =
+      (req.headers['x-service-id'] as string | undefined) ?? 'default';
+    const clientId =
+      (req.headers['x-client-id'] as string | undefined) ?? req.ip ?? 'unknown';
 
     const capacityHeader = req.headers['x-rate-limit-capacity'];
     const refillRateHeader = req.headers['x-rate-limit-refill'];
@@ -40,8 +42,14 @@ export const rateLimitMiddleware =
     });
 
     res.setHeader('X-RateLimit-Limit', result.limit.toString());
-    res.setHeader('X-RateLimit-Remaining', Math.max(0, result.remaining).toString());
-    res.setHeader('X-RateLimit-Reset', Math.ceil(result.reset / 1000).toString());
+    res.setHeader(
+      'X-RateLimit-Remaining',
+      Math.max(0, result.remaining).toString()
+    );
+    res.setHeader(
+      'X-RateLimit-Reset',
+      Math.ceil(result.reset / 1000).toString()
+    );
 
     if (!result.allowed) {
       const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);

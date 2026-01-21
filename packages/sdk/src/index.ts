@@ -102,17 +102,17 @@ export class LimitlyClient {
     this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
     this.timeout = config.timeout ?? 5000;
-    
+
     if (config.posthog) {
       this.posthogClient = new PostHogClient(config.posthog);
     }
-    
+
     this.analytics = new Analytics(
       this.baseUrl,
       config.enableSystemAnalytics !== false,
       this.posthogClient
     );
-    
+
     if (config.redisUrl) {
       this.useRedis = true;
       this.redisClient = new RedisClient(config.redisUrl);
@@ -154,10 +154,10 @@ export class LimitlyClient {
 
   /**
    * Check if a request is allowed based on rate limits
-   * 
+   *
    * @param options - Rate limit options or identifier string
    * @returns Rate limit response with allowed status and metadata
-   * 
+   *
    * @example
    * ```typescript
    * const result = await client.checkRateLimit('user-123');
@@ -187,12 +187,17 @@ export class LimitlyClient {
       try {
         const serviceId = opts.serviceId ?? this.defaultServiceId ?? 'default';
         const clientId = opts.identifier ?? 'unknown';
-        const config = 
-          typeof opts.capacity === 'number' || typeof opts.refillRate === 'number'
+        const config =
+          typeof opts.capacity === 'number' ||
+          typeof opts.refillRate === 'number'
             ? { capacity: opts.capacity, refillRate: opts.refillRate }
             : undefined;
 
-        const result = await this.rateLimiter.check(serviceId, clientId, config);
+        const result = await this.rateLimiter.check(
+          serviceId,
+          clientId,
+          config
+        );
 
         this.analytics.trackRateLimitCheck(
           serviceId,
@@ -264,7 +269,9 @@ export class LimitlyClient {
         reset?: number;
       } = {
         ...(limitHeader && { limit: Number.parseInt(limitHeader, 10) }),
-        ...(remainingHeader && { remaining: Number.parseInt(remainingHeader, 10) }),
+        ...(remainingHeader && {
+          remaining: Number.parseInt(remainingHeader, 10),
+        }),
         ...(resetHeader && { reset: Number.parseInt(resetHeader, 10) * 1000 }),
       };
 
@@ -309,9 +316,9 @@ export class LimitlyClient {
 
   /**
    * Check the health status of the Limitly service
-   * 
+   *
    * @returns Health check response
-   * 
+   *
    * @example
    * ```typescript
    * const health = await client.health();
@@ -347,10 +354,10 @@ export class LimitlyClient {
 
 /**
  * Create a new Limitly client instance
- * 
+ *
  * @param config - Optional client configuration
  * @returns Limitly client instance
- * 
+ *
  * @example
  * ```typescript
  * const client = createClient({ serviceId: 'my-app' });
@@ -359,6 +366,5 @@ export class LimitlyClient {
 export function createClient(config?: LimitlyConfig): LimitlyClient {
   return new LimitlyClient(config);
 }
-
 
 export default LimitlyClient;

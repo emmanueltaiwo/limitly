@@ -111,17 +111,17 @@ export class RateLimiter {
             reset: number;
             limit: number;
           };
-          const allowed = typeof parsed.allowed === 'boolean' 
-            ? parsed.allowed 
-            : parsed.allowed === 1;
+          const allowed =
+            typeof parsed.allowed === 'boolean'
+              ? parsed.allowed
+              : parsed.allowed === 1;
           return {
             allowed,
             remaining: Number(parsed.remaining) || 0,
             reset: Number(parsed.reset) || now + 60000,
             limit: Number(parsed.limit) || capacity,
           };
-        } catch {
-        }
+        } catch {}
       }
 
       return {
