@@ -10,7 +10,12 @@ description: Protect your Express routes with Limitly. Learn how to create middl
 ```typescript
 // middleware/rate-limit.ts
 import { createClient } from 'limitly-sdk';
-const client = createClient({ serviceId: 'express-api' });
+
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'express-api'
+});
 
 export async function rateLimitMiddleware(req, res, next) {
   const identifier = req.user?.id || req.ip || 'anonymous';
@@ -40,7 +45,10 @@ app.get('/api/data', rateLimitMiddleware, (req, res) => {
 
 ```typescript
 function createRateLimitMiddleware(capacity: number, refillRate: number) {
-  const client = createClient({ serviceId: 'express-api' });
+  const client = createClient({
+    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    serviceId: 'express-api'
+  });
   return async (req, res, next) => {
     const result = await client.checkRateLimit({ identifier: req.user?.id || req.ip, capacity, refillRate });
     if (!result.allowed) return res.status(429).json({ error: 'Rate limit exceeded' });
@@ -65,7 +73,11 @@ Rate limit based on authenticated users:
 import { createClient } from 'limitly-sdk';
 import type { Request, Response, NextFunction } from 'express';
 
-const client = createClient({ serviceId: 'user-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'user-api'
+});
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -129,7 +141,11 @@ Handle rate limit errors gracefully:
 import { createClient } from 'limitly-sdk';
 import type { Request, Response, NextFunction } from 'express';
 
-const client = createClient({ serviceId: 'express-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'express-api'
+});
 
 export async function rateLimitMiddleware(
   req: Request,
@@ -203,11 +219,19 @@ export default router;
 ## Conditional Limiting
 
 ```typescript
+import { createClient } from 'limitly-sdk';
+
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'express-api'
+});
+
 export async function conditionalRateLimitMiddleware(req, res, next) {
   if (req.user?.isAdmin) return next();
   if (req.ip?.startsWith('192.168.')) return next();
   
-  const result = await checkLimit(req.user?.id || req.ip);
+  const result = await client.checkRateLimit(req.user?.id || req.ip);
   if (!result.allowed) return res.status(429).json({ error: 'Rate limit exceeded' });
   next();
 }

@@ -12,12 +12,16 @@ Limitly is built with TypeScript and provides complete type definitions out of t
 All functions and methods are fully typed:
 
 ```typescript
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 // TypeScript knows the return type
-const result = await checkLimit('user-123');
+const result = await client.checkRateLimit('user-123');
 // result: LimitlyResponse
 
 // Type-safe property access
@@ -62,12 +66,16 @@ Work with typed responses:
 
 ```typescript
 import type { LimitlyResponse } from 'limitly-sdk';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
-const checkLimit = rateLimit();
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 async function handleRequest(userId: string): Promise<LimitlyResponse> {
-  const result: LimitlyResponse = await checkLimit(userId);
+  const result: LimitlyResponse = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     // TypeScript knows reset might exist
@@ -128,7 +136,10 @@ interface ProtectedRouteOptions extends RateLimitOptions {
 async function protectedRoute(
   options: ProtectedRouteOptions
 ): Promise<LimitlyResponse> {
-  const client = createClient({ serviceId: 'api' });
+  const client = createClient({
+    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    serviceId: 'api'
+  });
   
   return client.checkRateLimit({
     identifier: options.endpoint 
@@ -155,7 +166,7 @@ Create generic helper functions:
 
 ```typescript
 import type { LimitlyResponse } from 'limitly-sdk';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 
 type RateLimitHandler<T> = (result: LimitlyResponse) => T;
 
@@ -164,8 +175,11 @@ async function withRateLimit<T>(
   onAllowed: RateLimitHandler<T>,
   onRateLimited: RateLimitHandler<T>
 ): Promise<T> {
-  const checkLimit = rateLimit();
-  const result = await checkLimit(identifier);
+  const client = createClient({
+    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    serviceId: 'my-app'
+  });
+  const result = await client.checkRateLimit(identifier);
   
   return result.allowed ? onAllowed(result) : onRateLimited(result);
 }
@@ -194,14 +208,18 @@ Type-safe integration with frameworks:
 ```typescript
 // Next.js App Router
 import type { LimitlyResponse } from 'limitly-sdk';
-import { rateLimit } from 'limitly-sdk';
+import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const checkLimit = rateLimit();
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'nextjs-api'
+});
 
 export async function GET(request: Request): Promise<NextResponse<LimitlyResponse | { error: string }>> {
   const userId = request.headers.get('x-user-id') || 'anonymous';
-  const result = await checkLimit(userId);
+  const result = await client.checkRateLimit(userId);
   
   if (!result.allowed) {
     return NextResponse.json(
@@ -232,7 +250,11 @@ Enable strict TypeScript settings for maximum type safety:
 With strict mode, TypeScript will catch potential issues:
 
 ```typescript
-const result = await checkLimit('user-123');
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+const result = await client.checkRateLimit('user-123');
 
 // TypeScript error if strict: true
 // Property 'remaining' may be undefined
@@ -249,7 +271,11 @@ if (result.remaining !== undefined) {
 Use type assertions when you're certain about types:
 
 ```typescript
-const result = await checkLimit('user-123');
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+const result = await client.checkRateLimit('user-123');
 
 // Type assertion when you know remaining exists
 if (result.allowed && result.remaining !== undefined) {

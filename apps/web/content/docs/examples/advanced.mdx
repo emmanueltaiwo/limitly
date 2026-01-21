@@ -12,7 +12,11 @@ Advanced patterns for complex rate limiting scenarios.
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'tiered-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'tiered-api'
+});
 
 const tierLimits = {
   free: { capacity: 100, refillRate: 10 },
@@ -38,7 +42,11 @@ async function checkTieredLimit(user: User, endpoint?: string) {
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'adaptive-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'adaptive-api'
+});
 
 // Simulate system load monitoring
 async function getSystemLoad(): Promise<number> {
@@ -105,7 +113,11 @@ await client.checkRateLimit({ identifier: `${userId}:${country}`, ...limits });
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'multi-window' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'multi-window'
+});
 
 async function checkMultiWindowLimit(userId: string) {
   // Check multiple time windows
@@ -160,7 +172,11 @@ Allow bursts but limit sustained traffic:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'burst-protection' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'burst-protection'
+});
 
 async function checkBurstLimit(userId: string) {
   // Short window for burst detection
@@ -198,7 +214,11 @@ Implement exponential backoff for rate-limited users:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'backoff' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'backoff'
+});
 
 interface RateLimitState {
   attempts: number;

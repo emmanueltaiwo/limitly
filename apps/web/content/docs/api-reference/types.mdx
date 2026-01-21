@@ -113,7 +113,11 @@ interface RateLimitOptions {
 import type { RateLimitOptions } from 'limitly-sdk';
 import { createClient } from 'limitly-sdk';
 
-const client = createClient();
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
 
 function checkCustomLimit(
   userId: string,
@@ -153,7 +157,10 @@ let client: LimitlyClient | null = null;
 
 export function getClient(): LimitlyClient {
   if (!client) {
-    client = createClient({ serviceId: 'my-api' });
+    client = createClient({
+      redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+      serviceId: 'my-api'
+    });
   }
   return client;
 }
@@ -175,7 +182,13 @@ function isAllowed(response: LimitlyResponse): response is LimitlyResponse & { a
 }
 
 // Usage
-const result = await checkLimit('user-123');
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+const result = await client.checkRateLimit('user-123');
 
 if (isRateLimited(result)) {
   // TypeScript knows result.allowed is false here
@@ -205,7 +218,10 @@ interface ProtectedRouteOptions extends RateLimitOptions {
 async function protectedRoute(
   options: ProtectedRouteOptions
 ): Promise<LimitlyResponse> {
-  const client = createClient({ serviceId: 'api' });
+  const client = createClient({
+    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    serviceId: 'api'
+  });
   
   return client.checkRateLimit({
     identifier: options.endpoint 

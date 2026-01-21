@@ -53,7 +53,13 @@ interface LimitlyResponse {
 ## Custom Limits
 
 ```typescript
-const result = await checkLimit({
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app'
+});
+
+const result = await client.checkRateLimit({
   identifier: 'user-123',
   capacity: 50,
   refillRate: 5

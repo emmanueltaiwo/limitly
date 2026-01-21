@@ -14,7 +14,11 @@ Different endpoints have different resource requirements. Apply appropriate limi
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'endpoint-based' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'endpoint-based'
+});
 
 // Define limits per endpoint based on resource usage
 const endpointLimits: Record<string, { capacity: number; refillRate: number }> = {
@@ -79,7 +83,11 @@ Dynamically adjust rate limits based on system load:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'adaptive' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'adaptive'
+});
 
 // Simulate system monitoring
 interface SystemMetrics {
@@ -159,7 +167,11 @@ Implement different limits for free, premium, and enterprise users:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'tiered' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'tiered'
+});
 
 interface User {
   id: string;
@@ -259,7 +271,11 @@ Adjust limits based on time of day or day of week:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'time-based' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'time-based'
+});
 
 interface TimeBasedConfig {
   peakHours: { capacity: number; refillRate: number };
@@ -309,7 +325,11 @@ Combine multiple strategies for comprehensive rate limiting:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'combined' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'combined'
+});
 
 interface RequestContext {
   user: User;

@@ -69,7 +69,11 @@ export async function GET(request: Request) {
 // pages/api/route.ts
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'nextjs-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'nextjs-api'
+});
 
 export default async function handler(req, res) {
   const userId = req.headers['x-user-id'] || 'anonymous';
@@ -88,7 +92,12 @@ export default async function handler(req, res) {
 ```typescript
 // middleware/rate-limit.ts
 import { createClient } from 'limitly-sdk';
-const client = createClient({ serviceId: 'express-api' });
+
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'express-api'
+});
 
 export async function rateLimitMiddleware(req, res, next) {
   const identifier = req.user?.id || req.ip || 'anonymous';
@@ -109,7 +118,11 @@ app.use('/api', rateLimitMiddleware);
 ### Fastify
 
 ```typescript
-const client = createClient({ serviceId: 'fastify-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'fastify-api'
+});
 
 fastify.addHook('onRequest', async (request, reply) => {
   const identifier = request.user?.id || request.ip || 'anonymous';
@@ -124,7 +137,11 @@ fastify.addHook('onRequest', async (request, reply) => {
 ### Hono
 
 ```typescript
-const client = createClient({ serviceId: 'hono-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'hono-api'
+});
 
 app.use('*', async (c, next) => {
   const identifier = c.req.header('x-user-id') || 'anonymous';
@@ -140,7 +157,11 @@ app.use('*', async (c, next) => {
 ## Custom Limits
 
 ```typescript
-const client = createClient({ serviceId: 'my-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-api'
+});
 
 // Per-endpoint limits
 const limits = {

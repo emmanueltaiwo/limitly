@@ -67,7 +67,11 @@ Check rate limit with just an identifier:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'my-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-api'
+});
 
 // Simple check with identifier
 const result = await client.checkRateLimit('user-123');

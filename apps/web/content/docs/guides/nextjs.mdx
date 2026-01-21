@@ -12,7 +12,11 @@ description: Integrate rate limiting into your Next.js API routes. Works with bo
 import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const client = createClient({ serviceId: 'nextjs-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'nextjs-api'
+});
 
 export async function GET(request: Request) {
   const userId = request.headers.get('x-user-id') || 'anonymous';
@@ -67,7 +71,11 @@ export async function GET(request: Request) {
 import { createClient } from 'limitly-sdk';
 import { NextResponse } from 'next/server';
 
-const client = createClient({ serviceId: 'nextjs-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'nextjs-api'
+});
 
 export async function checkRouteLimit(
   request: Request,
@@ -130,7 +138,11 @@ export async function POST(request: Request) {
 // pages/api/route.ts
 import { createClient } from 'limitly-sdk';
 
-const client = createClient({ serviceId: 'nextjs-api' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'nextjs-api'
+});
 
 export default async function handler(req, res) {
   const userId = req.headers['x-user-id'] || 'anonymous';
@@ -151,7 +163,11 @@ export default async function handler(req, res) {
 import { createClient } from 'limitly-sdk';
 import { headers } from 'next/headers';
 
-const client = createClient({ serviceId: 'server-actions' });
+// Recommended: Use your own Redis
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'server-actions'
+});
 
 export async function protectedAction(data: FormData) {
   const userId = headers().get('x-user-id') || 'anonymous';

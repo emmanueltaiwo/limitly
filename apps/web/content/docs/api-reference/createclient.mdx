@@ -87,14 +87,26 @@ const result = await client.checkRateLimit({
 This is useful when you have multiple services and want to keep their rate limits separate:
 
 ```typescript
+// Recommended: Use your own Redis
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
 // API service
-const apiClient = createClient({ serviceId: 'api-service' });
+const apiClient = createClient({
+  redisUrl,
+  serviceId: 'api-service'
+});
 
 // Authentication service
-const authClient = createClient({ serviceId: 'auth-service' });
+const authClient = createClient({
+  redisUrl,
+  serviceId: 'auth-service'
+});
 
 // Background job service
-const jobClient = createClient({ serviceId: 'job-service' });
+const jobClient = createClient({
+  redisUrl,
+  serviceId: 'job-service'
+});
 
 // Each service has independent rate limit buckets
 await apiClient.checkRateLimit({ identifier: 'user-123' });
@@ -162,6 +174,7 @@ Set a custom timeout for HTTP requests:
 
 ```typescript
 const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   serviceId: 'my-app',
   timeout: 3000  // 3 seconds timeout
 });
@@ -241,20 +254,26 @@ export const apiClient = createClient({
 Create multiple clients for different use cases:
 
 ```typescript
+// Recommended: Use your own Redis
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
 // Strict rate limiting for authentication
 const authClient = createClient({
+  redisUrl,
   serviceId: 'auth',
   timeout: 2000
 });
 
 // Lenient rate limiting for public APIs
 const publicClient = createClient({
+  redisUrl,
   serviceId: 'public-api',
   timeout: 5000
 });
 
 // Background job rate limiting
 const jobClient = createClient({
+  redisUrl,
   serviceId: 'background-jobs',
   timeout: 10000
 });
@@ -307,7 +326,7 @@ export function getLimitlyClient() {
   if (!client) {
     // Recommended: Always provide redisUrl for production
     client = createClient({
-      redisUrl: process.env.REDIS_URL, // Required for production
+      redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
       serviceId: process.env.SERVICE_ID || 'default'
     });
   }
