@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { motion } from "motion/react";
-import { ChevronRight, Check, X, AlertCircle } from "lucide-react";
-import { Button } from "@repo/ui/button";
+import { motion } from 'motion/react';
+import { ChevronRight, Check, X, AlertCircle } from 'lucide-react';
+import { Button } from '@repo/ui/button';
 
 interface ComparisonRow {
   feature: string;
@@ -15,26 +15,110 @@ interface ComparisonRow {
 
 export function ComparisonSection() {
   const rows: ComparisonRow[] = [
-    { feature: "TypeScript Support", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (TypeScript-first)" },
-    { feature: "Type Safety", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (Full type exports)" },
-    { feature: "IntelliSense", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (JSDoc + types)" },
-    { feature: "Free", express: "✅", upstash: "⚠️ (Limited)", arcjet: "⚠️ (Limited)", unkey: "⚠️ (Limited)", limitly: "✅ (No limits)" },
-    { feature: "Distributed", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (Redis)" },
-    { feature: "Token Bucket", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
-    { feature: "Dynamic Limits", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
-    { feature: "Service Isolation", express: "❌", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
-    { feature: "Rate Limit Headers", express: "❌ (manual)", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅ (automatic)" },
-    { feature: "Graceful Degradation", express: "❌", upstash: "❌", arcjet: "❌", unkey: "❌", limitly: "✅" },
-    { feature: "Zero Config", express: "✅", upstash: "✅", arcjet: "✅", unkey: "✅", limitly: "✅" },
-    { feature: "Self-Hosted Option", express: "✅", upstash: "❌", arcjet: "❌", unkey: "❌", limitly: "✅" },
+    {
+      feature: 'TypeScript Support',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅ (TypeScript-first)',
+    },
+    {
+      feature: 'Type Safety',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅ (Full type exports)',
+    },
+    {
+      feature: 'IntelliSense',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅ (JSDoc + types)',
+    },
+    {
+      feature: 'Free',
+      express: '✅',
+      upstash: '⚠️ (Limited)',
+      arcjet: '⚠️ (Limited)',
+      unkey: '⚠️ (Limited)',
+      limitly: '✅ (No limits)',
+    },
+    {
+      feature: 'Distributed',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅ (Redis)',
+    },
+    {
+      feature: 'Token Bucket',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅',
+    },
+    {
+      feature: 'Dynamic Limits',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅',
+    },
+    {
+      feature: 'Service Isolation',
+      express: '❌',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅',
+    },
+    {
+      feature: 'Rate Limit Headers',
+      express: '❌ (manual)',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅ (automatic)',
+    },
+    {
+      feature: 'Graceful Degradation',
+      express: '❌',
+      upstash: '❌',
+      arcjet: '❌',
+      unkey: '❌',
+      limitly: '✅',
+    },
+    {
+      feature: 'Zero Config',
+      express: '✅',
+      upstash: '✅',
+      arcjet: '✅',
+      unkey: '✅',
+      limitly: '✅',
+    },
+    {
+      feature: 'Self-Hosted Option',
+      express: '✅',
+      upstash: '❌',
+      arcjet: '❌',
+      unkey: '❌',
+      limitly: '✅',
+    },
   ];
 
   const services = [
-    { name: "express-rate-limit", key: "express" as const },
-    { name: "Upstash", key: "upstash" as const },
-    { name: "Arcjet", key: "arcjet" as const },
-    { name: "Unkey", key: "unkey" as const },
-    { name: "Limitly", key: "limitly" as const, highlight: true },
+    { name: 'express-rate-limit', key: 'express' as const },
+    { name: 'Upstash', key: 'upstash' as const },
+    { name: 'Arcjet', key: 'arcjet' as const },
+    { name: 'Unkey', key: 'unkey' as const },
+    { name: 'Limitly', key: 'limitly' as const, highlight: true },
   ];
 
   const getValue = (row: ComparisonRow, serviceKey: keyof ComparisonRow) => {
@@ -42,30 +126,30 @@ export function ComparisonSection() {
   };
 
   const renderCell = (value: string) => {
-    if (value.includes("✅")) {
-      const text = value.replace("✅", "").trim();
+    if (value.includes('✅')) {
+      const text = value.replace('✅', '').trim();
       return (
-        <div className="flex items-center justify-center gap-2">
-          <Check className="w-5 h-5 text-green-400" />
-          {text && <span className="text-sm text-white/80">{text}</span>}
+        <div className='flex items-center justify-center gap-2'>
+          <Check className='w-5 h-5 text-green-400' />
+          {text && <span className='text-sm text-white/80'>{text}</span>}
         </div>
       );
     }
-    if (value.includes("❌")) {
-      const text = value.replace("❌", "").trim();
+    if (value.includes('❌')) {
+      const text = value.replace('❌', '').trim();
       return (
-        <div className="flex items-center justify-center gap-2">
-          <X className="w-5 h-5 text-red-400/60" />
-          {text && <span className="text-sm text-white/50">{text}</span>}
+        <div className='flex items-center justify-center gap-2'>
+          <X className='w-5 h-5 text-red-400/60' />
+          {text && <span className='text-sm text-white/50'>{text}</span>}
         </div>
       );
     }
-    if (value.includes("⚠️")) {
-      const text = value.replace("⚠️", "").trim();
+    if (value.includes('⚠️')) {
+      const text = value.replace('⚠️', '').trim();
       return (
-        <div className="flex items-center justify-center gap-2">
-          <AlertCircle className="w-5 h-5 text-yellow-400/80" />
-          {text && <span className="text-sm text-white/70">{text}</span>}
+        <div className='flex items-center justify-center gap-2'>
+          <AlertCircle className='w-5 h-5 text-yellow-400/80' />
+          {text && <span className='text-sm text-white/70'>{text}</span>}
         </div>
       );
     }
@@ -73,56 +157,61 @@ export function ComparisonSection() {
   };
 
   return (
-    <section id="comparison" className="py-32 px-4 sm:px-6 lg:px-8 relative">
-      <div className="max-w-7xl mx-auto">
-        <motion.div 
+    <section id='comparison' className='py-32 px-4 sm:px-6 lg:px-8 relative'>
+      <div className='max-w-7xl mx-auto'>
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          className='text-center mb-20'
         >
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 tracking-tighter px-2">
-            Why choose <span className="bg-gradient-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent">Limitly?</span>
+          <h2 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 tracking-tighter px-2'>
+            Why choose{' '}
+            <span className='bg-linear-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent'>
+              Limitly?
+            </span>
           </h2>
-          <p className="text-lg sm:text-xl md:text-2xl text-white/60 max-w-3xl mx-auto font-light px-2">
+          <p className='text-lg sm:text-xl md:text-2xl text-white/60 max-w-3xl mx-auto font-light px-2'>
             See how Limitly compares to other rate limiting solutions
           </p>
         </motion.div>
 
         {/* Simple Comparison Table */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/2 backdrop-blur-xl"
+          className='overflow-x-auto rounded-2xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-xl'
         >
-          <table className="w-full">
+          <table className='w-full'>
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-6 px-6 lg:px-8 text-sm font-semibold text-white/90 uppercase tracking-wider">
+              <tr className='border-b border-white/10'>
+                <th className='text-left py-6 px-6 lg:px-8 text-sm font-semibold text-white/90 uppercase tracking-wider'>
                   Feature
                 </th>
                 {services.map((service, i) => (
                   <th
                     key={service.name}
                     className={`text-center py-6 px-4 lg:px-6 text-sm font-semibold ${
-                      service.highlight 
-                        ? 'text-white bg-gradient-to-br from-white/10 to-white/5' 
+                      service.highlight
+                        ? 'text-white bg-linear-to-br from-white/10 to-white/5'
                         : 'text-white/70'
                     }`}
                   >
                     {service.highlight && (
                       <motion.span
-                        className="inline-block mb-1 px-2 py-0.5 rounded text-xs font-bold bg-white text-black"
+                        className='inline-block mb-1 px-2 py-0.5 rounded text-xs font-bold bg-white text-black'
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                       >
                         Best
                       </motion.span>
                     )}
-                    <div className={service.highlight ? 'mt-2' : ''}>{service.name}</div>
+                    <div className={service.highlight ? 'mt-2' : ''}>
+                      {service.name}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -135,9 +224,9 @@ export function ComparisonSection() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.05 }}
-                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  className='border-b border-white/5 hover:bg-white/5 transition-colors'
                 >
-                  <td className="py-6 px-6 lg:px-8 text-sm font-medium text-white/90">
+                  <td className='py-6 px-6 lg:px-8 text-sm font-medium text-white/90'>
                     {row.feature}
                   </td>
                   {services.map((service) => {
@@ -146,7 +235,9 @@ export function ComparisonSection() {
                       <td
                         key={service.name}
                         className={`py-6 px-4 lg:px-6 text-center ${
-                          service.highlight ? 'bg-gradient-to-br from-white/5 to-white/2' : ''
+                          service.highlight
+                            ? 'bg-linear-to-br from-white/5 to-white/2'
+                            : ''
                         }`}
                       >
                         {renderCell(value)}
@@ -160,28 +251,29 @@ export function ComparisonSection() {
         </motion.div>
 
         {/* Footer Note */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-16 text-center"
+          className='mt-16 text-center'
         >
-          <p className="text-white/50 text-sm mb-8 font-medium inline-flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            Limited free tiers may have usage restrictions or require credit cards
+          <p className='text-white/50 text-sm mb-8 font-medium inline-flex items-center gap-2'>
+            <AlertCircle className='w-4 h-4' />
+            Limited free tiers may have usage restrictions or require credit
+            cards
           </p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
-              href="/docs"
-              className="px-10 py-5 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-300 text-lg group inline-flex items-center gap-2 shadow-2xl shadow-white/20 hover:shadow-white/30"
+              href='/docs'
+              className='px-10 py-5 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-300 text-lg group inline-flex items-center gap-2 shadow-2xl shadow-white/20 hover:shadow-white/30'
             >
               Get Started Free
               <motion.span
                 animate={{ x: [0, 4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className='w-5 h-5' />
               </motion.span>
             </Button>
           </motion.div>

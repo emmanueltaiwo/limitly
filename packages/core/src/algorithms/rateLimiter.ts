@@ -103,7 +103,7 @@ class RateLimiter {
 
   /**
    * Check rate limit and return detailed result
-   * 
+   *
    * @param serviceId - Service identifier for isolation
    * @param id - Client identifier
    * @param config - Optional rate limit configuration
@@ -141,9 +141,10 @@ class RateLimiter {
             reset: number;
             limit: number;
           };
-          const allowed = typeof parsed.allowed === 'boolean' 
-            ? parsed.allowed 
-            : parsed.allowed === 1;
+          const allowed =
+            typeof parsed.allowed === 'boolean'
+              ? parsed.allowed
+              : parsed.allowed === 1;
           return {
             allowed,
             remaining: Number(parsed.remaining) || 0,
@@ -173,7 +174,7 @@ class RateLimiter {
 
   /**
    * Check if a request is allowed (simplified boolean check)
-   * 
+   *
    * @param serviceId - Service identifier for isolation
    * @param id - Client identifier
    * @param config - Optional rate limit configuration

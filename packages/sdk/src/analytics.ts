@@ -11,7 +11,11 @@ interface AnalyticsEvent {
 }
 
 function hashIdentifier(value: string): string {
-  return crypto.createHash('sha256').update(value).digest('hex').substring(0, 16);
+  return crypto
+    .createHash('sha256')
+    .update(value)
+    .digest('hex')
+    .substring(0, 16);
 }
 
 export class Analytics {
@@ -23,7 +27,11 @@ export class Analytics {
   private readonly flushInterval = 5000;
   private readonly batchSize = 10;
 
-  constructor(baseUrl: string, enabled: boolean = true, posthogClient?: PostHogClient) {
+  constructor(
+    baseUrl: string,
+    enabled: boolean = true,
+    posthogClient?: PostHogClient
+  ) {
     this.baseUrl = baseUrl;
     this.enabled = enabled;
     this.posthogClient = posthogClient;
@@ -153,8 +161,7 @@ export class Analytics {
       });
 
       clearTimeout(timeoutId);
-    } catch {
-    }
+    } catch {}
   }
 
   async shutdown(): Promise<void> {

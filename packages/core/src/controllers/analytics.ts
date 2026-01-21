@@ -19,7 +19,10 @@ function isValidEvent(event: unknown): event is AnalyticsEvent {
   );
 }
 
-export const postAnalytics = async (req: Request, res: Response): Promise<void> => {
+export const postAnalytics = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const posthog = getPostHog();
   if (!posthog) {
     res.status(200).json({ success: true, message: 'Analytics disabled' });

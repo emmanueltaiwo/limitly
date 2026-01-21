@@ -5,7 +5,11 @@ import { redisClient } from '../config/redis.js';
 
 const analyticsLimiter = new RateLimiter(redisClient, 100, 10);
 
-export const analyticsAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const analyticsAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;

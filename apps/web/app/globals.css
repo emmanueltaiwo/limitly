@@ -1,32 +1,32 @@
-@import "tailwindcss";
-@import "fumadocs-ui/css/neutral.css";
-@import "fumadocs-ui/css/preset.css";
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
 
 :root {
   --background: #000000;
   --foreground: #ffffff;
-  
+
   /* Fumadocs official CSS variables */
   --fd-sidebar-width: 240px;
   --fd-nav-height: 80px;
-  
+
   /* Custom theme variables */
   --fd-content-background: #000000;
   --fd-content-foreground: #ffffff;
-  
+
   --fd-muted: rgba(255, 255, 255, 0.6);
   --fd-muted-foreground: rgba(255, 255, 255, 0.8);
-  
+
   --fd-border: rgba(255, 255, 255, 0.1);
   --fd-ring: rgba(255, 255, 255, 0.2);
-  
+
   --fd-code-background: #1a1a1a;
   --fd-code-foreground: #e5e5e5;
   --fd-code-border: rgba(255, 255, 255, 0.1);
-  
+
   --fd-link: #60a5fa;
   --fd-link-hover: #93c5fd;
-  
+
   --fd-toc-border: rgba(255, 255, 255, 0.1);
 }
 
@@ -52,7 +52,8 @@ code {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -142,12 +143,12 @@ aside[data-sidebar] a:hover,
 }
 
 /* Active sidebar item */
-aside[data-sidebar] a[data-active="true"],
-.fd-sidebar a[data-active="true"],
-[data-sidebar] a[data-active="true"],
-aside[data-sidebar] [data-active="true"],
-.fd-sidebar [data-active="true"],
-[data-sidebar] [data-active="true"] {
+aside[data-sidebar] a[data-active='true'],
+.fd-sidebar a[data-active='true'],
+[data-sidebar] a[data-active='true'],
+aside[data-sidebar] [data-active='true'],
+.fd-sidebar [data-active='true'],
+[data-sidebar] [data-active='true'] {
   background: rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
   font-weight: 500;
@@ -167,9 +168,9 @@ aside[data-sidebar] [data-folder] > button,
   font-weight: 600;
 }
 
-aside[data-sidebar] [data-folder][data-active="true"] > button,
-.fd-sidebar [data-folder][data-active="true"] > button,
-[data-sidebar] [data-folder][data-active="true"] > button {
+aside[data-sidebar] [data-folder][data-active='true'] > button,
+.fd-sidebar [data-folder][data-active='true'] > button,
+[data-sidebar] [data-folder][data-active='true'] > button {
   color: #ffffff !important;
 }
 
@@ -275,7 +276,7 @@ aside[data-sidebar]::-webkit-scrollbar-thumb:hover,
 }
 
 [data-toc] a:hover,
-[data-toc] a[data-active="true"] {
+[data-toc] a[data-active='true'] {
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
@@ -369,7 +370,6 @@ aside[data-sidebar]::-webkit-scrollbar-thumb:hover,
   background: rgba(255, 255, 255, 0.02);
 }
 
-
 /* Better spacing and layout */
 [data-content] {
   padding: 2rem 0;
@@ -409,28 +409,28 @@ aside[data-sidebar]::-webkit-scrollbar-thumb:hover,
   h1[data-title] {
     font-size: 2rem;
   }
-  
+
   [data-content] h2 {
     font-size: 1.5rem;
   }
-  
+
   [data-content] h3 {
     font-size: 1.25rem;
   }
-  
+
   [data-content] pre {
     padding: 1rem;
     font-size: 0.8125rem;
   }
-  
+
   [data-content] {
     padding: 1.5rem 0;
   }
-  
+
   [data-content] table {
     font-size: 0.875rem;
   }
-  
+
   [data-content] th,
   [data-content] td {
     padding: 0.5rem 0.75rem;

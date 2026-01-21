@@ -1,13 +1,18 @@
-"use client";
+'use client';
 
-import { motion } from "motion/react";
-import { useScroll, useTransform, useMotionValue, useSpring } from "motion/react";
-import { useState, useEffect } from "react";
+import { motion } from 'motion/react';
+import {
+  useScroll,
+  useTransform,
+  useMotionValue,
+  useSpring,
+} from 'motion/react';
+import { useState, useEffect } from 'react';
 
 export function BackgroundEffects() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   // Smooth mouse tracking
@@ -16,7 +21,7 @@ export function BackgroundEffects() {
   const springConfig = { damping: 50, stiffness: 100 };
   const x = useSpring(mouseX, springConfig);
   const yMouse = useSpring(mouseY, springConfig);
-  
+
   // Transform mouse positions for cursor glow
   const cursorLeft = useTransform(x, (x) => x - 192);
   const cursorTop = useTransform(yMouse, (y) => y - 192);
@@ -27,17 +32,17 @@ export function BackgroundEffects() {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [mouseX, mouseY]);
 
   return (
     <>
       {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+      <div className='fixed inset-0 overflow-hidden pointer-events-none -z-10'>
         {/* Large animated gradient orbs */}
-        <motion.div 
-          className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-to-br from-white/15 via-white/5 to-transparent rounded-full blur-3xl"
+        <motion.div
+          className='absolute top-0 left-1/4 w-[800px] h-[800px] bg-linear-to-br from-white/15 via-white/5 to-transparent rounded-full blur-3xl'
           animate={{
             x: [0, 150, 0],
             y: [0, -80, 0],
@@ -46,13 +51,13 @@ export function BackgroundEffects() {
           transition={{
             duration: 25,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: 'easeInOut',
           }}
           style={{ y }}
         />
-        
-        <motion.div 
-          className="absolute bottom-0 right-1/4 w-[700px] h-[700px] bg-gradient-to-tl from-white/12 via-white/5 to-transparent rounded-full blur-3xl"
+
+        <motion.div
+          className='absolute bottom-0 right-1/4 w-[700px] h-[700px] bg-linear-to-tl from-white/12 via-white/5 to-transparent rounded-full blur-3xl'
           animate={{
             x: [0, -120, 0],
             y: [0, 80, 0],
@@ -61,14 +66,14 @@ export function BackgroundEffects() {
           transition={{
             duration: 30,
             repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
+            ease: 'easeInOut',
+            delay: 1,
           }}
           style={{ y }}
         />
-        
-        <motion.div 
-          className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-gradient-to-l from-white/10 via-white/3 to-transparent rounded-full blur-3xl"
+
+        <motion.div
+          className='absolute top-1/2 right-0 w-[500px] h-[500px] bg-linear-to-l from-white/10 via-white/3 to-transparent rounded-full blur-3xl'
           animate={{
             x: [0, -100, 0],
             y: [0, 50, 0],
@@ -77,14 +82,14 @@ export function BackgroundEffects() {
           transition={{
             duration: 22,
             repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5
+            ease: 'easeInOut',
+            delay: 0.5,
           }}
           style={{ y }}
         />
-        
-        <motion.div 
-          className="absolute top-1/3 left-0 w-[400px] h-[400px] bg-gradient-to-r from-white/8 via-white/3 to-transparent rounded-full blur-3xl"
+
+        <motion.div
+          className='absolute top-1/3 left-0 w-[400px] h-[400px] bg-linear-to-r from-white/8 via-white/3 to-transparent rounded-full blur-3xl'
           animate={{
             x: [0, 80, 0],
             y: [0, -40, 0],
@@ -93,15 +98,15 @@ export function BackgroundEffects() {
           transition={{
             duration: 18,
             repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1.5
+            ease: 'easeInOut',
+            delay: 1.5,
           }}
           style={{ y }}
         />
-        
+
         {/* Interactive cursor glow with smooth spring animation */}
         <motion.div
-          className="absolute w-96 h-96 bg-white/8 rounded-full blur-3xl"
+          className='absolute w-96 h-96 bg-white/8 rounded-full blur-3xl'
           style={{
             left: cursorLeft,
             top: cursorTop,
@@ -113,15 +118,15 @@ export function BackgroundEffects() {
           transition={{
             duration: 3,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: 'easeInOut',
           }}
         />
-        
+
         {/* Additional floating orbs */}
         {[...Array(3)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-[300px] h-[300px] bg-white/5 rounded-full blur-2xl"
+            className='absolute w-[300px] h-[300px] bg-white/5 rounded-full blur-2xl'
             style={{
               left: `${20 + i * 30}%`,
               top: `${30 + i * 20}%`,
@@ -136,7 +141,7 @@ export function BackgroundEffects() {
             transition={{
               duration: 15 + i * 3,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: 'easeInOut',
               delay: i * 2,
             }}
           />
@@ -144,27 +149,27 @@ export function BackgroundEffects() {
       </div>
 
       {/* Enhanced grid pattern with parallax */}
-      <motion.div 
-        className="fixed inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none -z-10"
+      <motion.div
+        className='fixed inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-size-[4rem_4rem] pointer-events-none -z-10'
         style={{ y, opacity }}
       />
-      
+
       {/* Animated radial gradient overlay */}
-      <motion.div 
-        className="fixed inset-0 bg-radial-gradient from-transparent via-black/30 to-black pointer-events-none -z-10"
+      <motion.div
+        className='fixed inset-0 bg-radial-gradient from-transparent via-black/30 to-black pointer-events-none -z-10'
         animate={{
           opacity: [0.5, 0.7, 0.5],
         }}
         transition={{
           duration: 10,
           repeat: Infinity,
-          ease: "easeInOut"
+          ease: 'easeInOut',
         }}
       />
-      
+
       {/* Subtle noise texture */}
-      <div 
-        className="fixed inset-0 opacity-[0.015] pointer-events-none -z-10"
+      <div
+        className='fixed inset-0 opacity-[0.015] pointer-events-none -z-10'
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}

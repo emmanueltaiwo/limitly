@@ -1,6 +1,6 @@
-import { source } from "@/lib/source";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import { Navbar } from "../components/navbar";
+import { source } from '@/lib/source';
+import { DocsLayout } from 'fumadocs-ui/layouts/docs';
+import { Navbar } from '../components/navbar';
 
 export default function DocsPageLayout({
   children,
@@ -8,13 +8,13 @@ export default function DocsPageLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className='min-h-screen bg-black text-white'>
       <Navbar hideLinks />
-      <DocsLayout 
+      <DocsLayout
         tree={source.getPageTree()}
         nav={{
-          title: "Limitly",
-          url: "/",
+          title: 'Limitly',
+          url: '/',
         }}
       >
         {children}

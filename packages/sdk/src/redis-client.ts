@@ -34,7 +34,11 @@ export class RedisClient {
     }
   }
 
-  async eval(script: string, keys: string[], args: string[]): Promise<string | null> {
+  async eval(
+    script: string,
+    keys: string[],
+    args: string[]
+  ): Promise<string | null> {
     if (!this.redisClient) return null;
     if (!this.isConnected) {
       await this.connect();
