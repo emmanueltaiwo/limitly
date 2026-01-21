@@ -160,10 +160,10 @@ export function ComparisonSection() {
     <section id='comparison' className='py-32 px-4 sm:px-6 lg:px-8 relative'>
       <div className='max-w-7xl mx-auto'>
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.4 }}
           className='text-center mb-20'
         >
           <h2 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 tracking-tighter px-2'>
@@ -179,10 +179,10 @@ export function ComparisonSection() {
 
         {/* Simple Comparison Table */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.4 }}
           className='overflow-x-auto rounded-2xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-xl'
         >
           <table className='w-full'>
@@ -191,7 +191,7 @@ export function ComparisonSection() {
                 <th className='text-left py-6 px-6 lg:px-8 text-sm font-semibold text-white/90 uppercase tracking-wider'>
                   Feature
                 </th>
-                {services.map((service, i) => (
+                {services.map((service) => (
                   <th
                     key={service.name}
                     className={`text-center py-6 px-4 lg:px-6 text-sm font-semibold ${
@@ -201,13 +201,9 @@ export function ComparisonSection() {
                     }`}
                   >
                     {service.highlight && (
-                      <motion.span
-                        className='inline-block mb-1 px-2 py-0.5 rounded text-xs font-bold bg-white text-black'
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
+                      <span className='inline-block mb-1 px-2 py-0.5 rounded text-xs font-bold bg-white text-black'>
                         Best
-                      </motion.span>
+                      </span>
                     )}
                     <div className={service.highlight ? 'mt-2' : ''}>
                       {service.name}
@@ -218,12 +214,8 @@ export function ComparisonSection() {
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <motion.tr
+                <tr
                   key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
                   className='border-b border-white/5 hover:bg-white/5 transition-colors'
                 >
                   <td className='py-6 px-6 lg:px-8 text-sm font-medium text-white/90'>
@@ -244,7 +236,7 @@ export function ComparisonSection() {
                       </td>
                     );
                   })}
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -255,28 +247,23 @@ export function ComparisonSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className='mt-16 text-center'
+          transition={{ duration: 0.4 }}
+          className='mt-16 flex flex-col items-center gap-6 sm:gap-8'
         >
-          <p className='text-white/50 text-sm mb-8 font-medium inline-flex items-center gap-2'>
-            <AlertCircle className='w-4 h-4' />
-            Limited free tiers may have usage restrictions or require credit
-            cards
+          <p className='text-white/50 text-sm sm:text-base font-medium inline-flex items-center gap-2 text-center px-4'>
+            <AlertCircle className='w-4 h-4 flex-shrink-0' />
+            <span>
+              Limited free tiers may have usage restrictions or require credit
+              cards
+            </span>
           </p>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              href='/docs'
-              className='px-10 py-5 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-300 text-lg group inline-flex items-center gap-2 shadow-2xl shadow-white/20 hover:shadow-white/30'
-            >
-              Get Started Free
-              <motion.span
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <ChevronRight className='w-5 h-5' />
-              </motion.span>
-            </Button>
-          </motion.div>
+          <Button
+            href='/docs'
+            className='px-8 sm:px-10 py-4 sm:py-5 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-200 text-base sm:text-lg inline-flex items-center justify-center gap-2 shadow-lg shadow-white/20'
+          >
+            Get Started Free
+            <ChevronRight className='w-5 h-5' />
+          </Button>
         </motion.div>
       </div>
     </section>
