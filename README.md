@@ -10,7 +10,7 @@ Limitly is a centralized rate-limiting service using Redis and token bucket algo
 - 🆓 **Free Forever** - No API keys, no payments, no limits
 - 🚀 **Distributed** - Redis-backed for multi-server deployments
 - 🔐 **Bring Your Own Redis** - Optional Redis URL for full tenant isolation
-- ⚙️ **Token Bucket** - More accurate than fixed window limits
+- ⚙️ **Multiple Algorithms** - Token bucket, sliding window, fixed window, and leaky bucket
 - 🔒 **Service Isolation** - Same IP across sites? No problem
 - 🎯 **Dynamic Config** - Per-request limits without redeployment
 - 📊 **Rate Limit Headers** - Standard `X-RateLimit-*` headers
@@ -31,16 +31,16 @@ import { createClient } from 'limitly-sdk';
 // Use your own Redis (recommended for production)
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-app'
+  serviceId: 'my-app',
 });
 
 async function handler(req, res) {
   const result = await client.checkRateLimit(req.userId || req.ip);
-  
+
   if (!result.allowed) {
     return res.status(429).json({ error: 'Too many requests' });
   }
-  
+
   // Process request...
 }
 ```
@@ -54,6 +54,7 @@ const client = createClient({ serviceId: 'my-app' });
 ```
 
 **Why bring your own Redis?**
+
 - ✅ Full tenant isolation (no collisions with other users)
 - ✅ Data privacy (your rate limit data stays in your Redis)
 - ✅ Better performance (direct connection, no HTTP overhead)
@@ -141,6 +142,7 @@ turbo build --filter=@limitly/core
 ## Architecture
 
 **HTTP API Mode (default):**
+
 ```
 User Application
     ↓
@@ -152,6 +154,7 @@ Redis (rate limit storage)
 ```
 
 **Direct Redis Mode (optional):**
+
 ```
 User Application
     ↓

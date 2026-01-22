@@ -1,9 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
 import { envConfig } from '../config/env.js';
 import RateLimiter from '../algorithms/rateLimiter.js';
-import { redisClient } from '../config/redis.js';
 
-const analyticsLimiter = new RateLimiter(redisClient, 100, 10);
+const analyticsLimiter = new RateLimiter(
+  'token-bucket',
+  100,
+  10,
+  100,
+  60000,
+  10
+);
 
 export const analyticsAuth = async (
   req: Request,
