@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import type { PostHogClient } from './posthog-client.js';
 
 const ANALYTICS_TOKEN = 'limitly-analytics';
-const SDK_VERSION = '1.3.2';
+const SDK_VERSION = '1.4.0';
 
 interface AnalyticsEvent {
   event: string;

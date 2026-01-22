@@ -3,6 +3,12 @@ import { RateLimiter } from './rate-limiter.js';
 import { Analytics } from './analytics.js';
 import { PostHogClient } from './posthog-client.js';
 import type { PostHogConfig } from './posthog-client.js';
+import type {
+  RateLimitAlgorithm,
+  RateLimitConfig,
+} from './strategies/index.js';
+
+export type { RateLimitAlgorithm };
 
 /**
  * limitly-sdk
@@ -23,6 +29,8 @@ export interface LimitlyConfig {
   timeout?: number;
   /** Redis URL for direct Redis connection (optional, uses HTTP API if not provided) */
   redisUrl?: string;
+  /** Rate limiting algorithm to use (default: 'token-bucket') */
+  algorithm?: RateLimitAlgorithm;
   /** Enable system analytics tracking (default: true) */
   enableSystemAnalytics?: boolean;
   /** PostHog configuration for sending events to your PostHog instance */
@@ -81,6 +89,14 @@ export interface RateLimitOptions {
   capacity?: number;
   /** Override default refill rate (tokens per second) */
   refillRate?: number;
+  /** Override default limit (for window-based algorithms) */
+  limit?: number;
+  /** Override default window size in milliseconds (for window-based algorithms) */
+  windowSize?: number;
+  /** Override default leak rate (for leaky bucket) */
+  leakRate?: number;
+  /** Override algorithm for this request */
+  algorithm?: RateLimitAlgorithm;
   /** Skip rate limiting for this request */
   skip?: boolean;
 }
@@ -94,7 +110,7 @@ export class LimitlyClient {
   private readonly timeout: number;
   private readonly useRedis: boolean;
   private readonly redisClient?: RedisClient;
-  private readonly rateLimiter?: RateLimiter;
+  private readonly defaultAlgorithm: RateLimitAlgorithm;
   private readonly analytics: Analytics;
   private readonly posthogClient?: PostHogClient;
 
@@ -102,6 +118,7 @@ export class LimitlyClient {
     this.baseUrl = config.baseUrl ?? 'https://api.limitly.emmanueltaiwo.dev';
     this.defaultServiceId = config.serviceId;
     this.timeout = config.timeout ?? 5000;
+    this.defaultAlgorithm = config.algorithm ?? 'token-bucket';
 
     if (config.posthog) {
       this.posthogClient = new PostHogClient(config.posthog);
@@ -116,7 +133,6 @@ export class LimitlyClient {
     if (config.redisUrl) {
       this.useRedis = true;
       this.redisClient = new RedisClient(config.redisUrl);
-      this.rateLimiter = new RateLimiter(this.redisClient, 100, 10);
       this.redisClient.connect().catch(() => {});
     } else {
       this.useRedis = false;
@@ -183,21 +199,39 @@ export class LimitlyClient {
       } as const;
     }
 
-    if (this.useRedis && this.rateLimiter) {
+    if (this.useRedis && this.redisClient) {
       try {
         const serviceId = opts.serviceId ?? this.defaultServiceId ?? 'default';
         const clientId = opts.identifier ?? 'unknown';
-        const config =
-          typeof opts.capacity === 'number' ||
-          typeof opts.refillRate === 'number'
-            ? { capacity: opts.capacity, refillRate: opts.refillRate }
-            : undefined;
+        const algorithm = opts.algorithm ?? this.defaultAlgorithm;
 
-        const result = await this.rateLimiter.check(
-          serviceId,
-          clientId,
-          config
+        const config: RateLimitConfig = {
+          ...(typeof opts.capacity === 'number'
+            ? { capacity: opts.capacity }
+            : {}),
+          ...(typeof opts.refillRate === 'number'
+            ? { refillRate: opts.refillRate }
+            : {}),
+          ...(typeof opts.limit === 'number' ? { limit: opts.limit } : {}),
+          ...(typeof opts.windowSize === 'number'
+            ? { windowSize: opts.windowSize }
+            : {}),
+          ...(typeof opts.leakRate === 'number'
+            ? { leakRate: opts.leakRate }
+            : {}),
+        };
+
+        const limiter = new RateLimiter(
+          this.redisClient,
+          algorithm,
+          100,
+          10,
+          100,
+          60000,
+          10
         );
+
+        const result = await limiter.check(serviceId, clientId, config);
 
         this.analytics.trackRateLimitCheck(
           serviceId,
@@ -206,9 +240,9 @@ export class LimitlyClient {
           result.remaining,
           result.limit,
           result.reset,
-          !!config,
-          config?.capacity,
-          config?.refillRate
+          Object.keys(config).length > 0,
+          config.capacity,
+          config.refillRate
         );
 
         if (!result.allowed) {
@@ -246,12 +280,28 @@ export class LimitlyClient {
         headers['X-Service-Id'] = serviceId;
       }
 
+      if (opts.algorithm && opts.algorithm !== this.defaultAlgorithm) {
+        headers['X-Rate-Limit-Algorithm'] = opts.algorithm;
+      }
+
       if (typeof opts.capacity === 'number' && opts.capacity > 0) {
         headers['X-Rate-Limit-Capacity'] = opts.capacity.toString();
       }
 
       if (typeof opts.refillRate === 'number' && opts.refillRate >= 0) {
         headers['X-Rate-Limit-Refill'] = opts.refillRate.toString();
+      }
+
+      if (typeof opts.limit === 'number' && opts.limit > 0) {
+        headers['X-Rate-Limit-Limit'] = opts.limit.toString();
+      }
+
+      if (typeof opts.windowSize === 'number' && opts.windowSize > 0) {
+        headers['X-Rate-Limit-Window-Size'] = opts.windowSize.toString();
+      }
+
+      if (typeof opts.leakRate === 'number' && opts.leakRate >= 0) {
+        headers['X-Rate-Limit-Leak-Rate'] = opts.leakRate.toString();
       }
 
       const response = await this.request('/api/rate-limit', {

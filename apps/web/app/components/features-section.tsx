@@ -33,9 +33,9 @@ export function FeaturesSection() {
     },
     {
       icon: Gauge,
-      title: 'Token Bucket',
+      title: 'Multiple Algorithms',
       description:
-        'Advanced token bucket algorithm for smooth, continuous rate limiting.',
+        'Choose from token bucket, sliding window, fixed window, or leaky bucket algorithms.',
     },
     {
       icon: Shield,

@@ -1,13 +1,9 @@
-import RateLimiter from '../algorithms/rateLimiter.js';
+import RateLimiter, {
+  type RateLimitAlgorithm,
+} from '../algorithms/rateLimiter.js';
 import type { Request, Response, NextFunction } from 'express';
 import { trackRateLimitResult } from '../analytics/events.js';
 
-/**
- * Express middleware for rate limiting
- *
- * @param limiter - Rate limiter instance
- * @returns Express middleware function
- */
 export const rateLimitMiddleware =
   (limiter: RateLimiter) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -16,22 +12,52 @@ export const rateLimitMiddleware =
     const clientId =
       (req.headers['x-client-id'] as string | undefined) ?? req.ip ?? 'unknown';
 
+    const algorithmHeader = req.headers['x-rate-limit-algorithm'] as
+      | string
+      | undefined;
     const capacityHeader = req.headers['x-rate-limit-capacity'];
     const refillRateHeader = req.headers['x-rate-limit-refill'];
+    const limitHeader = req.headers['x-rate-limit-limit'];
+    const windowSizeHeader = req.headers['x-rate-limit-window-size'];
+    const leakRateHeader = req.headers['x-rate-limit-leak-rate'];
 
+    const algorithm =
+      (algorithmHeader as RateLimitAlgorithm | undefined) ?? 'token-bucket';
     const capacity = capacityHeader
       ? Number.parseInt(capacityHeader as string, 10)
       : undefined;
     const refillRate = refillRateHeader
       ? Number.parseFloat(refillRateHeader as string)
       : undefined;
+    const limit = limitHeader
+      ? Number.parseInt(limitHeader as string, 10)
+      : undefined;
+    const windowSize = windowSizeHeader
+      ? Number.parseInt(windowSizeHeader as string, 10)
+      : undefined;
+    const leakRate = leakRateHeader
+      ? Number.parseFloat(leakRateHeader as string)
+      : undefined;
 
-    const config =
-      typeof capacity === 'number' || typeof refillRate === 'number'
-        ? { capacity, refillRate }
-        : undefined;
+    const config: {
+      capacity?: number;
+      refillRate?: number;
+      limit?: number;
+      windowSize?: number;
+      leakRate?: number;
+    } = {};
+    if (typeof capacity === 'number') config.capacity = capacity;
+    if (typeof refillRate === 'number') config.refillRate = refillRate;
+    if (typeof limit === 'number') config.limit = limit;
+    if (typeof windowSize === 'number') config.windowSize = windowSize;
+    if (typeof leakRate === 'number') config.leakRate = leakRate;
 
-    const result = await limiter.check(serviceId, clientId, config);
+    const requestLimiter =
+      algorithm !== 'token-bucket'
+        ? new RateLimiter(algorithm, 100, 10, 100, 60000, 10)
+        : limiter;
+
+    const result = await requestLimiter.check(serviceId, clientId, config);
 
     // Track analytics event
     trackRateLimitResult(serviceId, clientId, result, {

@@ -10,7 +10,7 @@ Creates a new Limitly client instance with custom configuration. **For productio
 ## Function Signature
 
 ```typescript
-function createClient(config?: LimitlyConfig): LimitlyClient
+function createClient(config?: LimitlyConfig): LimitlyClient;
 ```
 
 ## Parameters
@@ -21,21 +21,27 @@ Configuration object for the client:
 
 ```typescript
 interface PostHogConfig {
-  apiKey: string;          // PostHog API key
-  host?: string;           // PostHog host (default: https://app.posthog.com)
+  apiKey: string; // PostHog API key
+  host?: string; // PostHog host (default: https://app.posthog.com)
 }
 
 interface LimitlyConfig {
-  redisUrl?: string;       // ⭐ Recommended for production. Redis connection URL for direct Redis mode
-  serviceId?: string;      // Service identifier for isolation
-  timeout?: number;        // Request timeout in milliseconds (default: 5000)
-  baseUrl?: string;        // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when redisUrl is not provided.
-  enableSystemAnalytics?: boolean;  // Enable system analytics tracking (default: true). All identifiers are hashed for privacy.
+  redisUrl?: string; // ⭐ Recommended for production. Redis connection URL for direct Redis mode
+  serviceId?: string; // Service identifier for isolation
+  algorithm?:
+    | 'token-bucket'
+    | 'sliding-window'
+    | 'fixed-window'
+    | 'leaky-bucket'; // Rate limiting algorithm (default: 'token-bucket')
+  timeout?: number; // Request timeout in milliseconds (default: 5000)
+  baseUrl?: string; // Base URL of the Limitly API service (default: https://api.limitly.emmanueltaiwo.dev). Only used when redisUrl is not provided.
+  enableSystemAnalytics?: boolean; // Enable system analytics tracking (default: true). All identifiers are hashed for privacy.
   posthog?: PostHogConfig; // PostHog configuration to send events to your PostHog instance
 }
 ```
 
 **Important:**
+
 - **With `redisUrl`**: SDK connects directly to your Redis. Full tenant isolation, no collisions with other users. **Recommended for production.**
 - **Without `redisUrl`**: Uses HTTP API mode (hosted service). Shares Redis with other users - may collide if multiple users use the same `serviceId`. Good for development/testing.
 
@@ -53,10 +59,17 @@ A `LimitlyClient` instance with the following methods:
 ```typescript
 import { createClient } from 'limitly-sdk';
 
-// Recommended for production
+// Recommended for production (default: token-bucket algorithm)
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-app'
+  serviceId: 'my-app',
+});
+
+// Or choose a different algorithm
+const client = createClient({
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  serviceId: 'my-app',
+  algorithm: 'sliding-window', // or 'fixed-window', 'leaky-bucket'
 });
 ```
 
@@ -75,12 +88,12 @@ Isolate rate limits by service or application:
 // Recommended: Use with your own Redis
 const client = createClient({
   redisUrl: process.env.REDIS_URL,
-  serviceId: 'my-api-service'
+  serviceId: 'my-api-service',
 });
 
 // All rate limits using this client will be isolated under 'my-api-service'
 const result = await client.checkRateLimit({
-  identifier: 'user-123'
+  identifier: 'user-123',
 });
 ```
 
@@ -93,19 +106,19 @@ const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 // API service
 const apiClient = createClient({
   redisUrl,
-  serviceId: 'api-service'
+  serviceId: 'api-service',
 });
 
 // Authentication service
 const authClient = createClient({
   redisUrl,
-  serviceId: 'auth-service'
+  serviceId: 'auth-service',
 });
 
 // Background job service
 const jobClient = createClient({
   redisUrl,
-  serviceId: 'job-service'
+  serviceId: 'job-service',
 });
 
 // Each service has independent rate limit buckets
@@ -122,7 +135,7 @@ await jobClient.checkRateLimit({ identifier: 'user-123' });
 // Recommended for production
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-app'
+  serviceId: 'my-app',
 });
 
 // All rate limit data stored in your Redis - no collisions
@@ -130,12 +143,14 @@ const result = await client.checkRateLimit('user-123');
 ```
 
 **Benefits of using your own Redis:**
+
 - ✅ **Full tenant isolation** - No collisions with other Limitly users
 - ✅ **Data privacy** - Your rate limit data stays in your Redis instance
 - ✅ **Better performance** - Direct Redis connection (no HTTP overhead)
 - ✅ **Production ready** - Recommended for all production deployments
 
 **Without `redisUrl` (HTTP API mode):**
+
 - ⚠️ Shares hosted Redis with other users
 - ⚠️ Potential collisions if multiple users use the same `serviceId`
 - ✅ Works out of the box with zero configuration
@@ -151,18 +166,20 @@ const client = createClient({
   serviceId: 'my-app',
   posthog: {
     apiKey: process.env.POSTHOG_API_KEY!,
-    host: 'https://app.posthog.com' // optional
-  }
+    host: 'https://app.posthog.com', // optional
+  },
 });
 ```
 
 **How it works:**
+
 - Events are sent to your PostHog with actual identifiers (serviceId, clientId)
 - Events are also sent to Limitly's analytics endpoint (if enabled) with hashed identifiers
 - Both happen asynchronously and failures don't affect rate limiting
 - Tracked events: `rate_limit_check`, `rate_limit_allowed`, `rate_limit_denied`
 
 **Benefits:**
+
 - Track your own analytics in PostHog
 - See actual user IDs (not hashed)
 - Build custom dashboards and insights
@@ -176,11 +193,12 @@ Set a custom timeout for HTTP requests:
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   serviceId: 'my-app',
-  timeout: 3000  // 3 seconds timeout
+  timeout: 3000, // 3 seconds timeout
 });
 ```
 
 This is useful when:
+
 - You want faster failure detection
 - Your network has higher latency
 - You're using a remote API service
@@ -194,11 +212,12 @@ Limitly collects anonymous usage analytics to improve the service. Analytics are
 const client = createClient({
   redisUrl: process.env.REDIS_URL,
   serviceId: 'my-app',
-  enableSystemAnalytics: false
+  enableSystemAnalytics: false,
 });
 ```
 
 **Privacy:**
+
 - All identifiers (service IDs, client IDs) are hashed before sending to Limitly
 - No sensitive data (Redis URLs, IP addresses) is collected
 - Analytics are sent asynchronously and failures don't affect rate limiting
@@ -207,12 +226,14 @@ const client = createClient({
 **Note:** If you provide `posthog` config, events are sent to your PostHog with actual identifiers (not hashed) for your own analytics. Limitly's system analytics (if enabled) still uses hashed identifiers.
 
 **What's tracked:**
+
 - Rate limit check events (allowed/denied)
 - Usage patterns (limits, remaining, reset times)
 - SDK version
 - Custom configuration usage
 
 **What's NOT tracked:**
+
 - Raw identifiers or user data (in system analytics - hashed only)
 - Redis connection strings
 - IP addresses
@@ -232,19 +253,19 @@ const isProduction = process.env.NODE_ENV === 'production';
 export const prodClient = createClient({
   redisUrl: process.env.REDIS_URL!, // Required for production
   serviceId: process.env.SERVICE_ID || 'production',
-  timeout: parseInt(process.env.TIMEOUT || '5000', 10)
+  timeout: parseInt(process.env.TIMEOUT || '5000', 10),
 });
 
 // Development: use local Redis
 export const devClient = createClient({
   redisUrl: 'redis://localhost:6379',
   serviceId: 'dev',
-  timeout: 5000
+  timeout: 5000,
 });
 
 // ⚠️ Not recommended for production: HTTP API mode (shares hosted Redis)
 export const apiClient = createClient({
-  serviceId: 'my-app'
+  serviceId: 'my-app',
   // No redisUrl = uses HTTP API, may collide with other users
 });
 ```
@@ -261,21 +282,21 @@ const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const authClient = createClient({
   redisUrl,
   serviceId: 'auth',
-  timeout: 2000
+  timeout: 2000,
 });
 
 // Lenient rate limiting for public APIs
 const publicClient = createClient({
   redisUrl,
   serviceId: 'public-api',
-  timeout: 5000
+  timeout: 5000,
 });
 
 // Background job rate limiting
 const jobClient = createClient({
   redisUrl,
   serviceId: 'background-jobs',
-  timeout: 10000
+  timeout: 10000,
 });
 ```
 
@@ -288,7 +309,7 @@ import { createClient } from 'limitly-sdk';
 
 const client = createClient({
   serviceId: 'my-app',
-  redisUrl: process.env.REDIS_URL
+  redisUrl: process.env.REDIS_URL,
 });
 
 async function checkLimitSafely(userId: string) {
@@ -300,11 +321,11 @@ async function checkLimitSafely(userId: string) {
     if (error instanceof Error) {
       console.error('Rate limit check failed:', error.message);
     }
-    
+
     // Fail open - allow request if rate limiting fails
     return {
       allowed: true,
-      error: 'Rate limit service unavailable'
+      error: 'Rate limit service unavailable',
     };
   }
 }
@@ -313,8 +334,8 @@ async function checkLimitSafely(userId: string) {
 ## Best Practices
 
 1. **Use service IDs**: Always specify a `serviceId` to isolate rate limits
-3. **Connection pooling**: Limitly handles connection pooling automatically
-4. **Singleton pattern**: Create clients once and reuse them:
+2. **Connection pooling**: Limitly handles connection pooling automatically
+3. **Singleton pattern**: Create clients once and reuse them:
 
 ```typescript
 // lib/limitly.ts
@@ -327,7 +348,7 @@ export function getLimitlyClient() {
     // Recommended: Always provide redisUrl for production
     client = createClient({
       redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-      serviceId: process.env.SERVICE_ID || 'default'
+      serviceId: process.env.SERVICE_ID || 'default',
     });
   }
   return client;

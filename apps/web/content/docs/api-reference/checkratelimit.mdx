@@ -12,7 +12,7 @@ Checks if a request is allowed based on the configured rate limits. This is the 
 ```typescript
 function checkRateLimit(
   options?: RateLimitOptions | string
-): Promise<LimitlyResponse>
+): Promise<LimitlyResponse>;
 ```
 
 ## Parameters
@@ -27,22 +27,29 @@ await client.checkRateLimit({
   identifier: 'user-123',
   capacity: 100,
   refillRate: 10,
-  skip: false
-})
+  skip: false,
+});
 
 // As a string (shorthand for identifier)
-await client.checkRateLimit('user-123')
+await client.checkRateLimit('user-123');
 ```
 
 ### RateLimitOptions
 
 ```typescript
 interface RateLimitOptions {
-  identifier?: string;     // User ID, IP, or other unique identifier
-  capacity?: number;       // Maximum number of requests (default: 100)
-  refillRate?: number;     // Tokens refilled per second (default: 10)
-  window?: number;         // Time window in milliseconds (optional)
-  skip?: boolean;          // Skip rate limiting (default: false)
+  identifier?: string; // User ID, IP, or other unique identifier
+  algorithm?:
+    | 'token-bucket'
+    | 'sliding-window'
+    | 'fixed-window'
+    | 'leaky-bucket'; // Override algorithm for this request
+  capacity?: number; // Maximum capacity (for token bucket/leaky bucket, default: 100)
+  refillRate?: number; // Tokens refilled per second (for token bucket, default: 10)
+  limit?: number; // Maximum requests (for sliding/fixed window, default: 100)
+  windowSize?: number; // Window size in milliseconds (for sliding/fixed window, default: 60000)
+  leakRate?: number; // Leak rate per second (for leaky bucket, default: 10)
+  skip?: boolean; // Skip rate limiting (default: false)
 }
 ```
 
@@ -52,11 +59,11 @@ A `Promise<LimitlyResponse>` with the following structure:
 
 ```typescript
 interface LimitlyResponse {
-  allowed: boolean;        // true if request is allowed, false if rate limited
-  limit?: number;          // Total request capacity
-  remaining?: number;      // Number of requests remaining
-  reset?: number;          // Unix timestamp (milliseconds) when limit resets
-  message?: string;        // Optional error message if not allowed
+  allowed: boolean; // true if request is allowed, false if rate limited
+  limit?: number; // Total request capacity
+  remaining?: number; // Number of requests remaining
+  reset?: number; // Unix timestamp (milliseconds) when limit resets
+  message?: string; // Optional error message if not allowed
 }
 ```
 
@@ -70,7 +77,7 @@ import { createClient } from 'limitly-sdk';
 // Recommended: Use your own Redis
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-api'
+  serviceId: 'my-api',
 });
 
 // Simple check with identifier
@@ -88,19 +95,36 @@ if (result.allowed) {
 Override default limits for this specific check:
 
 ```typescript
+// Token bucket (default)
 const result = await client.checkRateLimit({
   identifier: 'user-123',
-  capacity: 50,      // Maximum 50 requests
-  refillRate: 5      // Refill 5 tokens per second
+  capacity: 50, // Maximum 50 requests
+  refillRate: 5, // Refill 5 tokens per second
 });
 
-console.log(result);
-// {
-//   allowed: true,
-//   limit: 50,
-//   remaining: 49,
-//   reset: 1705000000000
-// }
+// Sliding window
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  algorithm: 'sliding-window',
+  limit: 100, // 100 requests
+  windowSize: 60000, // per 60 seconds
+});
+
+// Fixed window
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  algorithm: 'fixed-window',
+  limit: 100,
+  windowSize: 60000,
+});
+
+// Leaky bucket
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  algorithm: 'leaky-bucket',
+  capacity: 100,
+  leakRate: 10, // Leak 10 per second
+});
 ```
 
 ## Understanding the Response
@@ -134,7 +158,7 @@ How many requests are still available:
 ```typescript
 if (result.remaining !== undefined) {
   console.log(`${result.remaining} requests remaining`);
-  
+
   // Set HTTP header
   res.setHeader('X-RateLimit-Remaining', result.remaining.toString());
 }
@@ -148,7 +172,7 @@ Unix timestamp (milliseconds) when the bucket will be full again:
 if (result.reset) {
   const resetDate = new Date(result.reset);
   console.log(`Limit resets at: ${resetDate.toISOString()}`);
-  
+
   // Calculate retry after seconds
   const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
   res.setHeader('Retry-After', retryAfter.toString());
@@ -162,7 +186,7 @@ Bypass rate limiting for specific cases (e.g., admins):
 ```typescript
 const result = await client.checkRateLimit({
   identifier: 'user-123',
-  skip: user.isAdmin  // Admins bypass rate limits
+  skip: user.isAdmin, // Admins bypass rate limits
 });
 
 // If skip is true, result.allowed will always be true
@@ -174,17 +198,20 @@ Use different limits for different endpoints:
 
 ```typescript
 async function checkEndpointLimit(userId: string, endpoint: string) {
-  const endpointLimits: Record<string, { capacity: number; refillRate: number }> = {
+  const endpointLimits: Record<
+    string,
+    { capacity: number; refillRate: number }
+  > = {
     '/api/login': { capacity: 5, refillRate: 0.1 },
     '/api/search': { capacity: 100, refillRate: 10 },
-    '/api/export': { capacity: 10, refillRate: 0.5 }
+    '/api/export': { capacity: 10, refillRate: 0.5 },
   };
-  
+
   const limits = endpointLimits[endpoint] || { capacity: 50, refillRate: 5 };
-  
+
   return await client.checkRateLimit({
     identifier: `${userId}:${endpoint}`,
-    ...limits
+    ...limits,
   });
 }
 ```
@@ -196,18 +223,18 @@ Handle errors gracefully:
 ```typescript
 try {
   const result = await client.checkRateLimit({
-    identifier: userId
+    identifier: userId,
   });
-  
+
   if (!result.allowed) {
     return handleRateLimit(result);
   }
-  
+
   return processRequest();
 } catch (error) {
   // Handle Redis connection errors, timeouts, etc.
   console.error('Rate limit check failed:', error);
-  
+
   // Fail open - allow request if rate limiting fails
   return processRequest();
 }
@@ -234,8 +261,8 @@ if (result.reset) {
 }
 
 if (!result.allowed) {
-  const retryAfter = result.reset 
-    ? Math.ceil((result.reset - Date.now()) / 1000) 
+  const retryAfter = result.reset
+    ? Math.ceil((result.reset - Date.now()) / 1000)
     : 60;
   res.setHeader('Retry-After', retryAfter.toString());
   return res.status(429).json({ error: 'Rate limit exceeded' });
@@ -253,6 +280,6 @@ if (!result.allowed) {
 const results = await Promise.all([
   client.checkRateLimit('user-1'),
   client.checkRateLimit('user-2'),
-  client.checkRateLimit('user-3')
+  client.checkRateLimit('user-3'),
 ]);
 ```

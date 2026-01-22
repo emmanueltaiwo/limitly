@@ -1,0 +1,284 @@
+---
+title: Rate Limiting Algorithms
+description: Learn about the different rate limiting algorithms available in Limitly and when to use each one.
+---
+
+# Rate Limiting Algorithms
+
+Limitly supports multiple rate limiting algorithms. Choose the one that best fits your use case.
+
+## Available Algorithms
+
+### Token Bucket (Default)
+
+**Best for:** General purpose rate limiting, smooth traffic with burst handling
+
+The token bucket algorithm provides smooth, continuous rate limiting with burst capability.
+
+```typescript
+import { createClient } from 'limitly-sdk';
+
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  algorithm: 'token-bucket', // default
+  serviceId: 'my-app',
+});
+
+// Each request consumes 1 token
+// Tokens refill at a constant rate
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  capacity: 100, // Bucket capacity
+  refillRate: 10, // 10 tokens per second
+});
+```
+
+**How it works:**
+
+- Starts with `capacity` tokens
+- Each request consumes 1 token
+- Tokens refill at `refillRate` per second
+- Allows bursts up to capacity
+- Smooth, continuous refill
+
+**Example:** `capacity=100, refillRate=10`
+
+- Initially: 100 requests allowed
+- After 1 second: +10 tokens (110 available)
+- After 10 seconds: Full bucket (100 tokens)
+
+### Sliding Window
+
+**Best for:** Accurate limits, smooth enforcement, better UX than fixed windows
+
+The sliding window tracks requests in a rolling time window, providing more accurate rate limiting than fixed windows.
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  algorithm: 'sliding-window',
+  serviceId: 'my-app',
+});
+
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  limit: 100, // 100 requests
+  windowSize: 60000, // per 60 seconds (rolling window)
+});
+```
+
+**How it works:**
+
+- Tracks individual request timestamps
+- Removes requests outside the window
+- Allows requests if count < limit
+- Smooth, rolling enforcement
+
+**Example:** `limit=100, windowSize=60000`
+
+- Allows 100 requests in any 60-second window
+- Window slides continuously
+- More accurate than fixed windows
+
+### Fixed Window
+
+**Best for:** Simple quotas, predictable reset times, API tier limits
+
+The fixed window divides time into discrete windows with predictable reset times.
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  algorithm: 'fixed-window',
+  serviceId: 'my-app',
+});
+
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  limit: 100, // 100 requests
+  windowSize: 60000, // per 60-second window
+});
+```
+
+**How it works:**
+
+- Divides time into fixed windows
+- Counts requests in current window
+- Resets at window boundary
+- Simple and predictable
+
+**Example:** `limit=100, windowSize=60000`
+
+- Window 1: 00:00-00:59 (100 requests allowed)
+- Window 2: 01:00-01:59 (resets, 100 requests allowed)
+- Predictable reset times
+
+### Leaky Bucket
+
+**Best for:** Traffic shaping, burst smoothing, constant output rate
+
+The leaky bucket smooths traffic by leaking requests at a constant rate, preventing spikes.
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  algorithm: 'leaky-bucket',
+  serviceId: 'my-app',
+});
+
+const result = await client.checkRateLimit({
+  identifier: 'user-123',
+  capacity: 100, // Bucket capacity
+  leakRate: 10, // Leak 10 requests per second
+});
+```
+
+**How it works:**
+
+- Requests fill the bucket
+- Bucket leaks at constant `leakRate`
+- Rejects if bucket would overflow
+- Smooths traffic spikes
+
+**Example:** `capacity=100, leakRate=10`
+
+- Burst of 50 requests: bucket fills to 50
+- Leaks at 10/second: empty in 5 seconds
+- Prevents traffic spikes
+
+## Choosing the Right Algorithm
+
+| Use Case                  | Recommended Algorithm | Why                                 |
+| ------------------------- | --------------------- | ----------------------------------- |
+| General API rate limiting | Token Bucket          | Smooth, allows bursts, good balance |
+| Accurate limits           | Sliding Window        | More accurate than fixed windows    |
+| Simple quotas             | Fixed Window          | Predictable, easy to understand     |
+| Traffic shaping           | Leaky Bucket          | Smooths bursts, constant output     |
+| User tiers                | Token Bucket          | Flexible capacity/refill rates      |
+| Per-minute limits         | Fixed Window          | Clear reset times                   |
+| Per-second limits         | Sliding Window        | Smooth enforcement                  |
+
+## Per-Request Algorithm Override
+
+You can override the algorithm for individual requests:
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  algorithm: 'token-bucket', // Default
+  serviceId: 'my-app',
+});
+
+// Use default algorithm (token bucket)
+await client.checkRateLimit({ identifier: 'user-123' });
+
+// Override for this request
+await client.checkRateLimit({
+  identifier: 'user-123',
+  algorithm: 'sliding-window',
+  limit: 50,
+  windowSize: 30000,
+});
+```
+
+## Algorithm-Specific Parameters
+
+Each algorithm uses different parameters:
+
+**Token Bucket:**
+
+- `capacity`: Maximum tokens
+- `refillRate`: Tokens per second
+
+**Sliding Window:**
+
+- `limit`: Maximum requests
+- `windowSize`: Window size in milliseconds
+
+**Fixed Window:**
+
+- `limit`: Maximum requests
+- `windowSize`: Window size in milliseconds
+
+**Leaky Bucket:**
+
+- `capacity`: Bucket capacity
+- `leakRate`: Leak rate per second
+
+## Examples
+
+### Different Algorithms Per Endpoint
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'my-api',
+});
+
+// Strict sliding window for auth
+async function checkAuth(userId: string) {
+  return client.checkRateLimit({
+    identifier: userId,
+    algorithm: 'sliding-window',
+    limit: 5,
+    windowSize: 60000, // 5 attempts per minute
+  });
+}
+
+// Token bucket for general API
+async function checkAPI(userId: string) {
+  return client.checkRateLimit({
+    identifier: userId,
+    algorithm: 'token-bucket',
+    capacity: 100,
+    refillRate: 10,
+  });
+}
+
+// Fixed window for exports
+async function checkExport(userId: string) {
+  return client.checkRateLimit({
+    identifier: userId,
+    algorithm: 'fixed-window',
+    limit: 10,
+    windowSize: 3600000, // 10 exports per hour
+  });
+}
+```
+
+### User Tier with Different Algorithms
+
+```typescript
+const client = createClient({
+  redisUrl: process.env.REDIS_URL,
+  serviceId: 'tiered-api',
+});
+
+async function checkLimit(user: { id: string; plan: string }) {
+  if (user.plan === 'free') {
+    // Free users: strict fixed window
+    return client.checkRateLimit({
+      identifier: user.id,
+      algorithm: 'fixed-window',
+      limit: 100,
+      windowSize: 3600000, // 100 per hour
+    });
+  } else if (user.plan === 'premium') {
+    // Premium: smooth token bucket
+    return client.checkRateLimit({
+      identifier: user.id,
+      algorithm: 'token-bucket',
+      capacity: 1000,
+      refillRate: 100,
+    });
+  } else {
+    // Enterprise: leaky bucket for traffic shaping
+    return client.checkRateLimit({
+      identifier: user.id,
+      algorithm: 'leaky-bucket',
+      capacity: 10000,
+      leakRate: 1000,
+    });
+  }
+}
+```

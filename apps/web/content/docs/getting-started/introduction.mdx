@@ -26,7 +26,7 @@ import { createClient } from 'limitly-sdk';
 // Recommended: Use your own Redis for production
 const client = createClient({
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-app'
+  serviceId: 'my-app',
 });
 
 const result = await client.checkRateLimit('user-123');
@@ -49,10 +49,21 @@ if (result.allowed) {
 
 ## How It Works
 
-Limitly uses the **Token Bucket Algorithm**:
+Limitly supports multiple rate limiting algorithms. Default is **Token Bucket**:
+
+**Token Bucket (Default):**
+
 - Each identifier gets a bucket with maximum capacity
 - Requests consume tokens; tokens refill at a constant rate
 - Allows smooth traffic with burst handling
+
+**Other Algorithms:**
+
+- **Sliding Window**: Smooth limits with better accuracy than fixed windows
+- **Fixed Window**: Simple, predictable time-based limits
+- **Leaky Bucket**: Traffic shaping and burst smoothing
+
+Choose the algorithm that fits your use case, or use different algorithms per endpoint.
 
 ## Getting Started
 
