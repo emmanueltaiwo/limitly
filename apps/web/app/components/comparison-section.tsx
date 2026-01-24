@@ -250,13 +250,6 @@ export function ComparisonSection() {
           transition={{ duration: 0.4 }}
           className='mt-16 flex flex-col items-center gap-6 sm:gap-8'
         >
-          <p className='text-white/50 text-sm sm:text-base font-medium inline-flex items-center gap-2 text-center px-4'>
-            <AlertCircle className='w-4 h-4 flex-shrink-0' />
-            <span>
-              Limited free tiers may have usage restrictions or require credit
-              cards
-            </span>
-          </p>
           <Button
             href='/docs'
             className='px-8 sm:px-10 py-4 sm:py-5 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-200 text-base sm:text-lg inline-flex items-center justify-center gap-2 shadow-lg shadow-white/20'
