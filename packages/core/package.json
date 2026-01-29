@@ -2,23 +2,15 @@
   "name": "@limitly/core",
   "version": "1.0.0",
   "description": "Core rate-limiting service for Limitly",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "README.md"
   ],
   "scripts": {
     "dev": "nodemon --watch src --exec tsx src/index.ts",
-    "build": "npx tsup",
+    "build": "tsc",
     "start": "node dist/index.js",
     "check-types": "tsc --noEmit",
     "prepublishOnly": "npm run build",
@@ -30,6 +22,7 @@
   "engines": {
     "node": ">=18"
   },
+  "type": "module",
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
@@ -37,7 +30,6 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
     "ts-jest": "^29.4.6",
-    "tsup": "^8.5.1",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   },
