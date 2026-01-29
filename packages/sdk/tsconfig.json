@@ -1,12 +1,13 @@
 {
   "extends": "../typescript-config/base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM"]
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"]
   },
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
