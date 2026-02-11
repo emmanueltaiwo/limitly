@@ -70,11 +70,11 @@ export function Navbar({ hideLinks = false }: Props) {
   return (
     <nav className='sticky top-0 z-50 bg-[#0a0a0a]/90 border-b border-white/6 backdrop-blur-xl'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        {/* Tab bar: desktop only (no scroll on mobile) */}
+        {/* Tab bar: desktop only, hidden on docs (hideLinks) */}
+        {!hideLinks && (
         <div className='hidden md:flex items-center justify-between h-12 border-b border-white/6'>
           <div className='flex items-center gap-0.5 min-w-0'>
-            {!hideLinks &&
-              debuggerTabs.map((tab) => {
+            {debuggerTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = tab.active;
                 return (
@@ -128,8 +128,9 @@ export function Navbar({ hideLinks = false }: Props) {
             </Button>
           </div>
         </div>
+        )}
 
-        {/* Main row: logo + desktop nav + mobile menu button */}
+        {/* Main row: logo + desktop nav (or docs links when hideLinks) + mobile menu */}
         <div className='flex items-center justify-between h-14 md:h-12'>
           <Link
             href='/'
@@ -145,7 +146,7 @@ export function Navbar({ hideLinks = false }: Props) {
             <span className='font-mono text-white'>limitly</span>
           </Link>
 
-          {!hideLinks && (
+          {!hideLinks ? (
             <div className='hidden md:flex items-center gap-0.5'>
               {navItems.map((item) => (
                 <Link
@@ -157,9 +158,46 @@ export function Navbar({ hideLinks = false }: Props) {
                 </Link>
               ))}
             </div>
+          ) : (
+            <div className='hidden md:flex items-center gap-2 ml-auto'>
+              <Link
+                href='/'
+                className='text-[11px] font-mono text-white/45 hover:text-amber-400 transition-colors px-2 py-1 rounded'
+              >
+                Home
+              </Link>
+              <Link
+                href='/docs'
+                className='text-[11px] font-mono text-amber-400 px-2 py-1 rounded'
+              >
+                docs
+              </Link>
+              <a
+                href='https://www.npmjs.com/package/limitly-sdk'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-white/45 hover:text-white transition-colors p-1.5 rounded hover:bg-white/5'
+                aria-label='View on npm'
+              >
+                <NpmIcon className='w-5 h-5 [&_path:first-of-type]:fill-transparent [&_path:last-of-type]:fill-white/60' />
+              </a>
+              <Button
+                href='https://github.com/emmanueltaiwo/limitly'
+                className='h-7 px-3 rounded bg-white/5 hover:bg-white/10 text-white text-[11px] font-medium border border-white/10 inline-flex items-center gap-1.5'
+              >
+                <Github className='w-3.5 h-3.5' />
+                <span>GitHub</span>
+                {githubStars !== null && (
+                  <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] font-mono'>
+                    <Star className='w-2.5 h-2.5 fill-current' />
+                    {githubStars > 0 ? githubStars.toLocaleString() : '0'}
+                  </span>
+                )}
+              </Button>
+            </div>
           )}
 
-          {/* Right: menu on mobile only; desktop has docs/npm/GitHub in tab row above */}
+          {/* Right: menu on mobile only */}
           <div className='flex items-center gap-2'>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
