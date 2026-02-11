@@ -2,7 +2,7 @@
 
 import { Navbar } from './components/navbar';
 import { Footer } from './components/footer';
-import { BackgroundEffects } from './components/background-effects';
+import { DebuggerBackground } from './components/debugger-background';
 import { HeroSection } from './components/hero-section';
 import { FeaturesSection } from './components/features-section';
 import { InstallationSection } from './components/installation-section';
@@ -12,20 +12,22 @@ import { CTASection } from './components/cta-section';
 
 export default function Home() {
   return (
-    <div className='min-h-screen bg-black text-white relative'>
-      <BackgroundEffects />
-      <Navbar />
+    <div className="min-h-screen text-white relative">
+      <DebuggerBackground />
+      <div className="relative z-10">
+        <Navbar />
 
-      <main className='relative overflow-x-hidden'>
+        <main className="relative overflow-x-hidden">
         <HeroSection />
         <FeaturesSection />
         <InstallationSection />
         <ComparisonSection />
         <FAQSection />
         <CTASection />
-      </main>
+        </main>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

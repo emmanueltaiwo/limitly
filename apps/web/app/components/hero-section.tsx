@@ -1,117 +1,107 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { ChevronRight, Sparkles, Lock, Shield } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@repo/ui/button';
+import { EditorBlock } from './editor-block';
+
+const heroCode = `// app/api/route.ts
+export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') ?? 'anonymous';
+  const result = await client.checkRateLimit(userId);
+
+  if (!result.allowed) {
+    return Response.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
+  return Response.json({ success: true });
+}`;
+
+const variables = [
+  { name: 'result.allowed', value: 'true', type: 'boolean' },
+  { name: 'result.remaining', value: '99', type: 'number' },
+  { name: 'result.limit', value: '100', type: 'number' },
+  { name: 'result.resetAt', value: 'Date', type: 'Date' },
+];
 
 export function HeroSection() {
   return (
-    <section className='pt-32 pb-40 px-4 sm:px-6 lg:px-8 relative min-h-screen flex items-center'>
+    <section className='pt-16 sm:pt-24 pb-20 sm:pb-32 px-4 sm:px-6 lg:px-8 relative min-h-[85vh] flex items-center'>
       <div className='max-w-7xl mx-auto w-full relative z-10'>
-        <div className='text-center relative'>
-          {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className='mb-8'
+        >
+          <span className='inline-flex items-center gap-2 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400/90 text-xs font-mono'>
+            <span className='w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse' />
+            Paused on breakpoint
+          </span>
+        </motion.div>
+
+        <div className='grid lg:grid-cols-[1fr,320px] gap-6 lg:gap-8 items-start'>
+          {/* Left: "Editor" with code */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className='inline-flex items-center gap-3 px-6 py-3 rounded-full bg-linear-to-r from-white/10 via-white/5 to-white/10 border border-white/20 backdrop-blur-xl mb-12'
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className='min-w-0'
           >
-            <span className='w-2.5 h-2.5 bg-white rounded-full' />
-            <span className='text-sm text-white/90 font-medium'>
-              Free, fast, and feature-rich
-            </span>
+            <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-2 font-mono'>
+              Rate limiting,
+              <br />
+              <span className='text-amber-400/90'>inspected.</span>
+            </h1>
+            <p className='text-white/55 text-sm sm:text-base font-mono mb-6 max-w-xl'>
+              TypeScript-first SDK. Redis-backed. Zero config. Free forever.
+            </p>
+            <EditorBlock
+              code={heroCode}
+              language='typescript'
+              currentLine={5}
+              title='api/route.ts'
+              lineNumbers={true}
+            />
+            <div className='flex flex-wrap gap-3 mt-6'>
+              <Button
+                href='/docs'
+                className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-amber-500 text-black hover:bg-amber-400 font-semibold text-sm font-mono transition-colors'
+              >
+                Get Started
+                <ChevronRight className='w-4 h-4' />
+              </Button>
+              <Button
+                href='#install'
+                className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-white/20 text-white/80 hover:bg-white/5 font-mono text-sm transition-colors'
+              >
+                Install
+              </Button>
+            </div>
           </motion.div>
 
-          {/* Main heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className='text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black mb-8 sm:mb-10 leading-[0.95] tracking-tighter px-2'
-          >
-            <span className='block bg-linear-to-b from-white via-white to-white/60 bg-clip-text text-transparent'>
-              Rate Limiting
-            </span>
-            <span className='block bg-linear-to-b from-white/90 via-white/60 to-white/30 bg-clip-text text-transparent mt-2 sm:mt-3'>
-              Made Simple
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className='text-lg sm:text-xl md:text-2xl text-white/70 mb-12 sm:mb-16 max-w-3xl mx-auto leading-relaxed font-light px-2'
-          >
-            The best TypeScript-first rate limiting SDK for Node.js and
-            browsers. Redis-backed distributed rate limiting with optional
-            bring-your-own Redis support.
-          </motion.p>
-
-          {/* CTA buttons */}
+          {/* Right: "Variables" panel */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className='flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center items-center mb-16 sm:mb-24 w-full px-4'
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className='rounded-lg border border-white/10 bg-[#111] overflow-hidden shrink-0'
           >
-            <Button
-              href='/docs'
-              className='w-full sm:w-auto px-10 sm:px-12 py-5 sm:py-6 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-200 text-base sm:text-lg inline-flex items-center justify-center gap-2 shadow-lg shadow-white/20'
-            >
-              Get Started
-              <ChevronRight className='w-5 h-5' />
-            </Button>
-            <Button
-              href='#install'
-              className='w-full sm:w-auto px-10 sm:px-12 py-5 sm:py-6 border-2 border-white/30 text-white hover:border-white/60 hover:bg-white/10 font-bold rounded-full transition-all duration-200 text-base sm:text-lg backdrop-blur-sm'
-            >
-              View Installation
-            </Button>
-          </motion.div>
-
-          {/* Stats Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className='grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto'
-          >
-            {[
-              {
-                label: 'Open Source',
-                value: '100%',
-                icon: Sparkles,
-              },
-              {
-                label: 'Free Forever',
-                value: 'No Limits',
-                icon: Lock,
-              },
-              {
-                label: 'Type Safe',
-                value: 'TypeScript',
-                icon: Shield,
-              },
-            ].map((stat, i) => {
-              const Icon = stat.icon;
-              return (
+            <div className='px-3 py-2 border-b border-white/10 bg-[#0d0d0d] flex items-center gap-2'>
+              <span className='text-xs text-white/40 font-mono'>VARIABLES</span>
+            </div>
+            <div className='p-3 font-mono text-xs'>
+              {variables.map((v, i) => (
                 <div
                   key={i}
-                  className='relative p-8 sm:p-10 rounded-3xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-xl hover:border-white/20 transition-all duration-300 text-center'
+                  className='flex items-baseline gap-3 py-1.5 border-b border-white/5 last:border-0'
                 >
-                  <div className='absolute top-4 right-4 opacity-20'>
-                    <Icon className='w-8 h-8 sm:w-10 sm:h-10' />
-                  </div>
-                  <div className='text-4xl sm:text-5xl font-black mb-3 bg-linear-to-b from-white to-white/70 bg-clip-text text-transparent'>
-                    {stat.value}
-                  </div>
-                  <div className='text-sm sm:text-base text-white/70 font-medium'>
-                    {stat.label}
-                  </div>
+                  <span className='text-cyan-400/90 shrink-0'>{v.name}</span>
+                  <span className='text-white/70 truncate'>{v.value}</span>
+                  <span className='text-white/35 shrink-0'>{v.type}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </motion.div>
         </div>
       </div>
