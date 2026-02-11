@@ -9,107 +9,100 @@ import {
   Shield,
   ChevronRight,
   BarChart,
+  CircleDot,
 } from 'lucide-react';
 
+const features = [
+  {
+    icon: Zap,
+    title: 'TypeScript-First',
+    desc: 'Fully typed, catch errors at compile time.',
+  },
+  {
+    icon: Lock,
+    title: 'Free Forever',
+    desc: 'No API keys, no payments, no usage caps.',
+  },
+  {
+    icon: Settings,
+    title: 'Zero Config',
+    desc: 'Install, import, start rate limiting in seconds.',
+  },
+  {
+    icon: Gauge,
+    title: 'Multiple Algorithms',
+    desc: 'Token bucket, sliding window, fixed window, leaky bucket.',
+  },
+  {
+    icon: Shield,
+    title: 'Bring Your Own Redis',
+    desc: 'Full tenant isolation with your own Redis or hosted.',
+  },
+  {
+    icon: ChevronRight,
+    title: 'Dynamic Config',
+    desc: 'Set limits per request without redeployment.',
+  },
+  {
+    icon: BarChart,
+    title: 'PostHog Analytics',
+    desc: 'Optional PostHog integration for rate limit events.',
+  },
+];
+
 export function FeaturesSection() {
-  const features = [
-    {
-      icon: Zap,
-      title: 'TypeScript-First',
-      description:
-        'Fully typed with excellent IDE support. Catch errors at compile time, not runtime.',
-    },
-    {
-      icon: Lock,
-      title: 'Free Forever',
-      description:
-        'No API keys, no payments, no limits on usage. Completely free for all projects.',
-    },
-    {
-      icon: Settings,
-      title: 'Zero Config',
-      description:
-        'Works out of the box. Install, import, and start rate limiting in seconds.',
-    },
-    {
-      icon: Gauge,
-      title: 'Multiple Algorithms',
-      description:
-        'Choose from token bucket, sliding window, fixed window, or leaky bucket algorithms.',
-    },
-    {
-      icon: Shield,
-      title: 'Bring Your Own Redis',
-      description:
-        'Optional Redis URL for full tenant isolation. Use your own Redis or the hosted service.',
-    },
-    {
-      icon: ChevronRight,
-      title: 'Dynamic Config',
-      description:
-        'Set limits per request without redeployment. Adjust on the fly.',
-    },
-    {
-      icon: BarChart,
-      title: 'PostHog Analytics',
-      description:
-        'Optional PostHog integration to track rate limit events in your own analytics dashboard.',
-    },
-  ];
-
   return (
-    <section id='features' className='py-32 px-4 sm:px-6 lg:px-8 relative'>
-      <div className='max-w-7xl mx-auto'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className='text-center mb-20'
-        >
-          <h2 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 tracking-tighter px-2'>
-            Built for{' '}
-            <span className='bg-linear-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent'>
-              developers
-            </span>
+    <section
+      id='features'
+      className='py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative'
+    >
+      <div className='max-w-6xl mx-auto'>
+        <header className='mb-12 sm:mb-16'>
+          <h2 className='text-2xl sm:text-3xl font-semibold text-white/95 font-mono tracking-tight'>
+            Watch
           </h2>
-          <p className='text-lg sm:text-xl md:text-2xl text-white/60 max-w-3xl mx-auto font-light px-2'>
-            Everything you need to implement sophisticated rate limiting without
-            the complexity.
+          <p className='mt-2 text-sm text-white/50 font-mono max-w-2xl'>
+            Everything you need to implement rate limiting without the
+            complexity.
           </p>
-        </motion.div>
+        </header>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8'>
-          {features.map((feature, i) => {
-            const Icon = feature.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-                className='group'
-              >
-                <div className='relative p-8 sm:p-10 rounded-3xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-xl hover:border-white/20 transition-all duration-300 cursor-pointer h-full'>
-                  {/* Icon */}
-                  <div className='mb-6 inline-flex p-4 rounded-2xl bg-linear-to-br from-white/10 to-white/5'>
-                    <Icon className='w-7 h-7 sm:w-8 sm:h-8 text-white' />
+        <div className='rounded-lg border border-white/10 bg-[#111] overflow-hidden'>
+          <div className='px-3 py-2 border-b border-white/10 bg-[#0d0d0d] flex items-center gap-2'>
+            <CircleDot className='w-3.5 h-3.5 text-amber-500/80' />
+            <span className='text-xs text-white/40 font-mono'>
+              BREAKPOINTS / FEATURES
+            </span>
+          </div>
+          <div className='grid sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/5'>
+            {features.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.3, delay: i * 0.03 }}
+                  className='p-4 sm:p-5 hover:bg-white/2 transition-colors group'
+                >
+                  <div className='flex items-start gap-3'>
+                    <div className='shrink-0 w-8 h-8 rounded flex items-center justify-center bg-white/5 border border-white/10 group-hover:border-amber-500/30 transition-colors'>
+                      <Icon className='w-4 h-4 text-white/70 group-hover:text-amber-400/90' />
+                    </div>
+                    <div className='min-w-0'>
+                      <div className='font-mono text-sm font-medium text-white/95'>
+                        {f.title}
+                      </div>
+                      <div className='mt-0.5 text-xs text-white/50 font-mono'>
+                        {f.desc}
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Content */}
-                  <div>
-                    <h3 className='text-xl sm:text-2xl font-bold mb-4 text-white'>
-                      {feature.title}
-                    </h3>
-                    <p className='text-white/60 leading-relaxed text-sm sm:text-base'>
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

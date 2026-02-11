@@ -2,141 +2,120 @@
 
 import { motion } from 'motion/react';
 import { Copy, Check } from 'lucide-react';
-import { CodeBlock } from '@repo/ui/code-block';
 import { useState } from 'react';
+import { EditorBlock } from './editor-block';
 
-interface InstallationStep {
-  step: number;
-  title: string;
-  description: string;
-  code: string;
-  language: 'bash' | 'typescript';
-  id: string;
-}
+const steps = [
+  {
+    title: 'Install',
+    desc: 'Get the Limitly SDK',
+    code: 'npm install limitly-sdk',
+    language: 'bash' as const,
+    currentLine: 1,
+  },
+  {
+    title: 'Create client',
+    desc: 'Initialize with your Redis (optional)',
+    code: `import { createClient } from 'limitly-sdk';
+
+const client = createClient({
+  redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
+  serviceId: 'my-app',
+});`,
+    language: 'typescript' as const,
+    currentLine: 4,
+  },
+  {
+    title: 'Use in your API',
+    desc: 'Protect endpoints with one call',
+    code: `export async function GET(request: Request) {
+  const userId = request.headers.get('x-user-id') ?? 'anonymous';
+  const result = await client.checkRateLimit(userId);
+
+  if (!result.allowed) {
+    return Response.json({ error: 'Too many requests' }, { status: 429 });
+  }
+  return Response.json({ success: true });
+}`,
+    language: 'typescript' as const,
+    currentLine: 4,
+  },
+];
 
 export function InstallationSection() {
-  const [copied, setCopied] = useState<string | null>(null);
+  const [copied, setCopied] = useState<number | null>(null);
 
-  const copyToClipboard = (text: string, id: string) => {
+  const copy = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
-    setCopied(id);
+    setCopied(index);
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const steps: InstallationStep[] = [
-    {
-      step: 1,
-      title: 'Install via npm',
-      description: 'Get the Limitly SDK for your project',
-      code: 'npm install limitly-sdk',
-      language: 'bash',
-      id: 'install',
-    },
-    {
-      step: 2,
-      title: 'Create rate limiter',
-      description:
-        'Initialize the rate limiting client (recommended: use your own Redis)',
-      code: `import { createClient } from 'limitly-sdk';
-
-// Recommended: Use your own Redis + PostHog for analytics
-const client = createClient({
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  serviceId: 'my-app',
-  posthog: {
-    apiKey: process.env.POSTHOG_API_KEY!,
-  }
-});
-
-// Without redisUrl (shares hosted Redis - may collide with other users)
-// const client = createClient({ serviceId: 'my-app' });`,
-      language: 'typescript',
-      id: 'init',
-    },
-    {
-      step: 3,
-      title: 'Use in your API',
-      description: 'Protect your endpoints with rate limiting',
-      code: `// Next.js App Router example
-export async function GET(request: Request) {
-  const userId = request.headers.get('x-user-id') || 'unknown';
-  const result = await client.checkRateLimit(userId);
-  
-  if (!result.allowed) {
-    return Response.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
-  }
-  
-  // Process your request...
-  return Response.json({ success: true });
-}`,
-      language: 'typescript',
-      id: 'usage',
-    },
-  ];
-
   return (
-    <section id='install' className='py-32 px-4 sm:px-6 lg:px-8 relative'>
+    <section
+      id='install'
+      className='py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative'
+    >
       <div className='max-w-6xl mx-auto'>
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-12 sm:mb-20 tracking-tighter text-center px-2'
-        >
-          Get started in{' '}
-          <span className='bg-linear-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent'>
-            seconds
-          </span>
-        </motion.h2>
+        <header className='mb-10 sm:mb-14'>
+          <h2 className='text-xl sm:text-2xl md:text-3xl font-semibold text-white/95 font-mono tracking-tight'>
+            Console
+          </h2>
+          <p className='mt-2 text-xs sm:text-sm text-white/50 font-mono max-w-2xl'>
+            Get started in seconds. Copy the snippets below.
+          </p>
+        </header>
 
-        <div className='space-y-12 sm:space-y-16'>
-          {steps.map((item, i) => (
+        <div className='space-y-6 sm:space-y-8'>
+          {steps.map((step, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-              className='flex flex-col lg:flex-row items-start gap-8 sm:gap-10 lg:gap-12'
+              transition={{ duration: 0.4, delay: i * 0.08 }}
+              className='rounded-lg border border-white/10 bg-[#111] overflow-hidden'
             >
-              {/* Step number */}
-              <div className='relative shrink-0'>
-                <div className='flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl sm:rounded-3xl bg-linear-to-br from-white to-white/90 text-black font-black text-xl sm:text-2xl lg:text-3xl shadow-lg shadow-white/20'>
-                  {item.step}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className='flex-1 w-full'>
-                <div className='mb-6 sm:mb-8'>
-                  <h3 className='text-2xl sm:text-3xl lg:text-4xl font-black mb-3 sm:mb-4 text-white'>
-                    {item.title}
-                  </h3>
-                  <p className='text-base sm:text-lg text-white/60'>
-                    {item.description}
-                  </p>
-                </div>
-                <div className='relative'>
-                  <div className='relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl'>
-                    <CodeBlock language={item.language}>
-                      {item.code}
-                    </CodeBlock>
-                    <button
-                      onClick={() => copyToClipboard(item.code, item.id)}
-                      className='absolute top-5 right-5 p-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 border border-white/10 hover:border-white/30'
-                    >
-                      {copied === item.id ? (
-                        <Check className='w-5 h-5 text-green-400' />
-                      ) : (
-                        <Copy className='w-5 h-5 text-white/60' />
-                      )}
-                    </button>
+              <div className='flex items-center justify-between gap-4 px-4 py-3 border-b border-white/10 bg-[#0d0d0d]'>
+                <div className='flex items-center gap-3 min-w-0'>
+                  <span className='flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded bg-amber-500/15 text-amber-400 text-xs sm:text-sm font-mono font-semibold'>
+                    {i + 1}
+                  </span>
+                  <div className='min-w-0'>
+                    <h3 className='font-mono text-xs sm:text-sm font-medium text-white/90'>
+                      {step.title}
+                    </h3>
+                    <p className='text-[11px] sm:text-xs text-white/50 font-mono truncate'>
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
+                <button
+                  onClick={() => copy(step.code, i)}
+                  className='shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30 transition-colors text-[11px] text-white/70 font-mono'
+                  aria-label='Copy snippet'
+                >
+                  {copied === i ? (
+                    <>
+                      <Check className='w-3.5 h-3.5 text-emerald-400' />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className='w-3.5 h-3.5' />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className='p-3 sm:p-4'>
+                <EditorBlock
+                  code={step.code}
+                  language={step.language}
+                  currentLine={step.currentLine}
+                  lineNumbers={true}
+                  className='w-full'
+                />
               </div>
             </motion.div>
           ))}

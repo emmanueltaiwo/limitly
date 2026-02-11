@@ -1,10 +1,12 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { ChevronRight, Check, X, AlertCircle } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@repo/ui/button';
 
-interface ComparisonRow {
+type ServiceKey = 'express' | 'upstash' | 'arcjet' | 'unkey' | 'limitly';
+
+interface Row {
   feature: string;
   express: string;
   upstash: string;
@@ -13,201 +15,173 @@ interface ComparisonRow {
   limitly: string;
 }
 
+const rows: Row[] = [
+  {
+    feature: 'TypeScript Support',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅ (first)',
+  },
+  {
+    feature: 'Type Safety',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅ (full)',
+  },
+  {
+    feature: 'IntelliSense',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅',
+  },
+  {
+    feature: 'Free',
+    express: '✅',
+    upstash: '⚠️',
+    arcjet: '⚠️',
+    unkey: '⚠️',
+    limitly: '✅ (no limits)',
+  },
+  {
+    feature: 'Distributed',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅ (Redis)',
+  },
+  {
+    feature: 'Token Bucket',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅',
+  },
+  {
+    feature: 'Dynamic Limits',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅',
+  },
+  {
+    feature: 'Rate Limit Headers',
+    express: '❌',
+    upstash: '✅',
+    arcjet: '✅',
+    unkey: '✅',
+    limitly: '✅',
+  },
+  {
+    feature: 'Graceful Degradation',
+    express: '❌',
+    upstash: '❌',
+    arcjet: '❌',
+    unkey: '❌',
+    limitly: '✅',
+  },
+  {
+    feature: 'Self-Hosted Option',
+    express: '✅',
+    upstash: '❌',
+    arcjet: '❌',
+    unkey: '❌',
+    limitly: '✅',
+  },
+];
+
+const services: { name: string; key: ServiceKey; highlight?: boolean }[] = [
+  { name: 'express-rate-limit', key: 'express' },
+  { name: 'Upstash', key: 'upstash' },
+  { name: 'Arcjet', key: 'arcjet' },
+  { name: 'Unkey', key: 'unkey' },
+  { name: 'Limitly', key: 'limitly', highlight: true },
+];
+
+function cellContent(value: string) {
+  if (value.includes('✅')) {
+    const rest = value.replace('✅', '').trim();
+    return (
+      <span className='inline-flex items-center gap-1.5 text-emerald-400/90'>
+        <Check className='w-4 h-4 shrink-0' />
+        {rest && (
+          <span className='text-white/70 text-xs font-mono'>{rest}</span>
+        )}
+      </span>
+    );
+  }
+  if (value.includes('❌')) {
+    return (
+      <span className='inline-flex items-center gap-1.5 text-white/30'>
+        <X className='w-4 h-4 shrink-0' />
+      </span>
+    );
+  }
+  if (value.includes('⚠️')) {
+    const rest = value.replace('⚠️', '').trim();
+    return (
+      <span className='inline-flex items-center gap-1.5 text-amber-400/80'>
+        <AlertCircle className='w-4 h-4 shrink-0' />
+        {rest && (
+          <span className='text-white/60 text-xs font-mono'>{rest}</span>
+        )}
+      </span>
+    );
+  }
+  return null;
+}
+
 export function ComparisonSection() {
-  const rows: ComparisonRow[] = [
-    {
-      feature: 'TypeScript Support',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅ (TypeScript-first)',
-    },
-    {
-      feature: 'Type Safety',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅ (Full type exports)',
-    },
-    {
-      feature: 'IntelliSense',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅ (JSDoc + types)',
-    },
-    {
-      feature: 'Free',
-      express: '✅',
-      upstash: '⚠️ (Limited)',
-      arcjet: '⚠️ (Limited)',
-      unkey: '⚠️ (Limited)',
-      limitly: '✅ (No limits)',
-    },
-    {
-      feature: 'Distributed',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅ (Redis)',
-    },
-    {
-      feature: 'Token Bucket',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅',
-    },
-    {
-      feature: 'Dynamic Limits',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅',
-    },
-    {
-      feature: 'Service Isolation',
-      express: '❌',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅',
-    },
-    {
-      feature: 'Rate Limit Headers',
-      express: '❌ (manual)',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅ (automatic)',
-    },
-    {
-      feature: 'Graceful Degradation',
-      express: '❌',
-      upstash: '❌',
-      arcjet: '❌',
-      unkey: '❌',
-      limitly: '✅',
-    },
-    {
-      feature: 'Zero Config',
-      express: '✅',
-      upstash: '✅',
-      arcjet: '✅',
-      unkey: '✅',
-      limitly: '✅',
-    },
-    {
-      feature: 'Self-Hosted Option',
-      express: '✅',
-      upstash: '❌',
-      arcjet: '❌',
-      unkey: '❌',
-      limitly: '✅',
-    },
-  ];
-
-  const services = [
-    { name: 'express-rate-limit', key: 'express' as const },
-    { name: 'Upstash', key: 'upstash' as const },
-    { name: 'Arcjet', key: 'arcjet' as const },
-    { name: 'Unkey', key: 'unkey' as const },
-    { name: 'Limitly', key: 'limitly' as const, highlight: true },
-  ];
-
-  const getValue = (row: ComparisonRow, serviceKey: keyof ComparisonRow) => {
-    return row[serviceKey];
-  };
-
-  const renderCell = (value: string) => {
-    if (value.includes('✅')) {
-      const text = value.replace('✅', '').trim();
-      return (
-        <div className='flex items-center justify-center gap-2'>
-          <Check className='w-5 h-5 text-green-400' />
-          {text && <span className='text-sm text-white/80'>{text}</span>}
-        </div>
-      );
-    }
-    if (value.includes('❌')) {
-      const text = value.replace('❌', '').trim();
-      return (
-        <div className='flex items-center justify-center gap-2'>
-          <X className='w-5 h-5 text-red-400/60' />
-          {text && <span className='text-sm text-white/50'>{text}</span>}
-        </div>
-      );
-    }
-    if (value.includes('⚠️')) {
-      const text = value.replace('⚠️', '').trim();
-      return (
-        <div className='flex items-center justify-center gap-2'>
-          <AlertCircle className='w-5 h-5 text-yellow-400/80' />
-          {text && <span className='text-sm text-white/70'>{text}</span>}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <section id='comparison' className='py-32 px-4 sm:px-6 lg:px-8 relative'>
-      <div className='max-w-7xl mx-auto'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className='text-center mb-20'
-        >
-          <h2 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 sm:mb-8 tracking-tighter px-2'>
-            Why choose{' '}
-            <span className='bg-linear-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent'>
-              Limitly?
-            </span>
+    <section
+      id='comparison'
+      className='py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative'
+    >
+      <div className='max-w-6xl mx-auto'>
+        <header className='mb-12 sm:mb-16'>
+          <h2 className='text-2xl sm:text-3xl font-semibold text-white/95 font-mono tracking-tight'>
+            Network
           </h2>
-          <p className='text-lg sm:text-xl md:text-2xl text-white/60 max-w-3xl mx-auto font-light px-2'>
-            See how Limitly compares to other rate limiting solutions
+          <p className='mt-2 text-sm text-white/50 font-mono max-w-2xl'>
+            Compare Limitly to other rate limiting solutions.
           </p>
-        </motion.div>
+        </header>
 
-        {/* Simple Comparison Table */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className='overflow-x-auto rounded-2xl border border-white/10 bg-linear-to-br from-white/5 to-white/2 backdrop-blur-xl'
+          className='rounded-lg border border-white/10 bg-[#111] overflow-hidden overflow-x-auto'
         >
-          <table className='w-full'>
+          <table className='w-full min-w-[640px] font-mono text-xs'>
             <thead>
-              <tr className='border-b border-white/10'>
-                <th className='text-left py-6 px-6 lg:px-8 text-sm font-semibold text-white/90 uppercase tracking-wider'>
+              <tr className='border-b border-white/10 bg-[#0d0d0d]'>
+                <th className='text-left py-3 px-4 text-white/50 font-medium uppercase tracking-wider'>
                   Feature
                 </th>
-                {services.map((service) => (
+                {services.map((s) => (
                   <th
-                    key={service.name}
-                    className={`text-center py-6 px-4 lg:px-6 text-sm font-semibold ${
-                      service.highlight
-                        ? 'text-white bg-linear-to-br from-white/10 to-white/5'
-                        : 'text-white/70'
+                    key={s.key}
+                    className={`text-center py-3 px-3 font-medium ${
+                      s.highlight
+                        ? 'text-amber-400/90 bg-amber-500/5'
+                        : 'text-white/50'
                     }`}
                   >
-                    {service.highlight && (
-                      <span className='inline-block mb-1 px-2 py-0.5 rounded text-xs font-bold bg-white text-black'>
-                        Best
+                    {s.highlight && (
+                      <span className='block text-[10px] text-amber-500/80 mb-0.5'>
+                        BEST
                       </span>
                     )}
-                    <div className={service.highlight ? 'mt-2' : ''}>
-                      {service.name}
-                    </div>
+                    {s.name}
                   </th>
                 ))}
               </tr>
@@ -216,46 +190,34 @@ export function ComparisonSection() {
               {rows.map((row, i) => (
                 <tr
                   key={i}
-                  className='border-b border-white/5 hover:bg-white/5 transition-colors'
+                  className='border-b border-white/5 hover:bg-white/2 transition-colors'
                 >
-                  <td className='py-6 px-6 lg:px-8 text-sm font-medium text-white/90'>
-                    {row.feature}
-                  </td>
-                  {services.map((service) => {
-                    const value = getValue(row, service.key);
-                    return (
-                      <td
-                        key={service.name}
-                        className={`py-6 px-4 lg:px-6 text-center ${
-                          service.highlight
-                            ? 'bg-linear-to-br from-white/5 to-white/2'
-                            : ''
-                        }`}
-                      >
-                        {renderCell(value)}
-                      </td>
-                    );
-                  })}
+                  <td className='py-3 px-4 text-white/80'>{row.feature}</td>
+                  {services.map((s) => (
+                    <td
+                      key={s.key}
+                      className={`py-3 px-3 text-center ${s.highlight ? 'bg-amber-500/3' : ''}`}
+                    >
+                      {cellContent(row[s.key])}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
         </motion.div>
 
-        {/* Footer Note */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className='mt-16 flex flex-col items-center gap-6 sm:gap-8'
+          className='mt-10 flex justify-center'
         >
           <Button
             href='/docs'
-            className='px-8 sm:px-10 py-4 sm:py-5 bg-white text-black hover:bg-gray-100 font-bold rounded-full transition-all duration-200 text-base sm:text-lg inline-flex items-center justify-center gap-2 shadow-lg shadow-white/20'
+            className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-amber-500 text-black hover:bg-amber-400 font-semibold text-sm font-mono'
           >
             Get Started Free
-            <ChevronRight className='w-5 h-5' />
           </Button>
         </motion.div>
       </div>
