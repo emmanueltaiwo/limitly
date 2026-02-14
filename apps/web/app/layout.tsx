@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: '%s | Limitly',
   },
   description:
-    'The best TypeScript-first rate limiting SDK for Node.js and browsers. Free, fast, and feature-rich with Redis-backed distributed rate limiting. Fully type-safe with excellent TypeScript support.',
+    'The first and only free distributed rate limiter in the JavaScript ecosystem. TypeScript-first, Redis-backed, zero config. Token bucket, sliding window, fixed window, leaky bucket. Express, Next.js, Fastify, Hono.',
   keywords: [
     'rate limiting',
     'rate limit',
@@ -34,6 +34,8 @@ export const metadata: Metadata = {
     'api rate limiting',
     'express rate limit',
     'nextjs rate limit',
+    'distributed rate limiter',
+    'javascript rate limiting',
   ],
   authors: [{ name: 'Emmanuel Taiwo' }],
   creator: 'Emmanuel Taiwo',
@@ -74,6 +76,7 @@ export const metadata: Metadata = {
     },
   },
   metadataBase: new URL('https://limitly.xyz'),
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({
