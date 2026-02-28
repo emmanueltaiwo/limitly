@@ -35,7 +35,7 @@ export function CTASection() {
           <div className='flex flex-col sm:flex-row gap-3 justify-center items-center'>
             <Button
               href='/docs'
-              className='inline-flex w-full md:w-fit items-center gap-2 px-5 py-2.5 rounded-md bg-amber-500 text-black hover:bg-amber-400 font-semibold text-sm font-mono'
+              className='inline-flex w-full md:w-fit items-center gap-2 px-5 py-2.5 rounded-md bg-blue-500 text-black hover:bg-blue-400 font-semibold text-sm font-mono'
             >
               Get Started Free
               <ChevronRight className='w-4 h-4' />
@@ -47,7 +47,7 @@ export function CTASection() {
               <Github className='w-4 h-4' />
               GitHub
               {stars !== null && stars > 0 && (
-                <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 text-amber-400/90 text-xs font-mono'>
+                <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 text-blue-400/90 text-xs font-mono'>
                   <Star className='w-3 h-3 fill-current' />
                   {stars.toLocaleString()}
                 </span>

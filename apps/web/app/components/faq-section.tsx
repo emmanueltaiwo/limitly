@@ -39,7 +39,7 @@ export function FAQSection() {
       <div className='max-w-3xl mx-auto'>
         <header className='mb-12 sm:mb-16'>
           <h2 className='text-2xl sm:text-3xl font-semibold text-white/95 font-mono tracking-tight flex items-center gap-2'>
-            <Layers className='w-6 h-6 text-amber-500/70' />
+            <Layers className='w-6 h-6 text-blue-500/70' />
             Call stack
           </h2>
           <p className='mt-2 text-sm text-white/50 font-mono'>
@@ -87,7 +87,7 @@ export function FAQSection() {
                         className='overflow-hidden'
                       >
                         <div className='px-4 pb-4 pt-0'>
-                          <p className='font-mono text-xs text-white/60 leading-relaxed border-l-2 border-amber-500/30 pl-3'>
+                          <p className='font-mono text-xs text-white/60 leading-relaxed border-l-2 border-blue-500/30 pl-3'>
                             {item.a}
                           </p>
                         </div>

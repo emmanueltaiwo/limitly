@@ -18,11 +18,11 @@ export function DebuggerBackground() {
       <div
         className="absolute left-0 top-0 bottom-0 w-px"
         style={{
-          background: 'linear-gradient(to bottom, transparent, rgba(245,158,11,0.15), transparent)',
+          background: 'linear-gradient(to bottom, transparent, rgba(59,130,246,0.15), transparent)',
         }}
       />
       {/* Soft orbs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/3 rounded-full blur-[100px]" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-500/3 rounded-full blur-[100px]" />
       <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-cyan-500/3 rounded-full blur-[80px]" />
     </div>
   );

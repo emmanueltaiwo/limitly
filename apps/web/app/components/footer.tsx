@@ -22,7 +22,7 @@ export function Footer() {
         <div className='flex items-center gap-6 font-mono text-xs text-white/50'>
           <Link
             href='/docs'
-            className='hover:text-amber-400/80 transition-colors'
+            className='hover:text-blue-400/80 transition-colors'
           >
             Docs
           </Link>
@@ -30,7 +30,7 @@ export function Footer() {
             href='https://www.npmjs.com/package/limitly-sdk'
             target='_blank'
             rel='noopener noreferrer'
-            className='inline-flex items-center gap-1.5 hover:text-amber-400/80 transition-colors'
+            className='inline-flex items-center gap-1.5 hover:text-blue-400/80 transition-colors'
           >
             <NpmIcon className='w-4 h-4 [&_path:first-of-type]:fill-transparent [&_path:last-of-type]:fill-current' />
             npm
@@ -39,7 +39,7 @@ export function Footer() {
             href='https://github.com/emmanueltaiwo/limitly'
             target='_blank'
             rel='noopener noreferrer'
-            className='inline-flex items-center gap-1.5 hover:text-amber-400/80 transition-colors'
+            className='inline-flex items-center gap-1.5 hover:text-blue-400/80 transition-colors'
           >
             <Github className='w-4 h-4' />
             GitHub

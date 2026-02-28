@@ -128,7 +128,7 @@ function cellContent(value: string) {
   if (value.includes('⚠️')) {
     const rest = value.replace('⚠️', '').trim();
     return (
-      <span className='inline-flex items-center gap-1.5 text-amber-400/80'>
+      <span className='inline-flex items-center gap-1.5 text-blue-400/80'>
         <AlertCircle className='w-4 h-4 shrink-0' />
         {rest && (
           <span className='text-white/60 text-xs font-mono'>{rest}</span>
@@ -172,12 +172,12 @@ export function ComparisonSection() {
                     key={s.key}
                     className={`text-center py-3 px-3 font-medium ${
                       s.highlight
-                        ? 'text-amber-400/90 bg-amber-500/5'
+                        ? 'text-blue-400/90 bg-blue-500/5'
                         : 'text-white/50'
                     }`}
                   >
                     {s.highlight && (
-                      <span className='block text-[10px] text-amber-500/80 mb-0.5'>
+                      <span className='block text-[10px] text-blue-500/80 mb-0.5'>
                         BEST
                       </span>
                     )}
@@ -196,7 +196,7 @@ export function ComparisonSection() {
                   {services.map((s) => (
                     <td
                       key={s.key}
-                      className={`py-3 px-3 text-center ${s.highlight ? 'bg-amber-500/3' : ''}`}
+                      className={`py-3 px-3 text-center ${s.highlight ? 'bg-blue-500/3' : ''}`}
                     >
                       {cellContent(row[s.key])}
                     </td>
@@ -215,7 +215,7 @@ export function ComparisonSection() {
         >
           <Button
             href='/docs'
-            className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-amber-500 text-black hover:bg-amber-400 font-semibold text-sm font-mono'
+            className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-blue-500 text-black hover:bg-blue-400 font-semibold text-sm font-mono'
           >
             Get Started Free
           </Button>

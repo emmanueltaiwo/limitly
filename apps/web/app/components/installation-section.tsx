@@ -78,7 +78,7 @@ export function InstallationSection() {
             >
               <div className='flex items-center justify-between gap-4 px-4 py-3 border-b border-white/10 bg-[#0d0d0d]'>
                 <div className='flex items-center gap-3 min-w-0'>
-                  <span className='flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded bg-amber-500/15 text-amber-400 text-xs sm:text-sm font-mono font-semibold'>
+                  <span className='flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded bg-blue-500/15 text-blue-400 text-xs sm:text-sm font-mono font-semibold'>
                     {i + 1}
                   </span>
                   <div className='min-w-0'>

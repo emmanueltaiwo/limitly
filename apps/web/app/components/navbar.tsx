@@ -86,7 +86,7 @@ export function Navbar({ hideLinks = false }: Props) {
                       min-w-0 shrink-0
                       ${
                         isActive
-                          ? 'border-amber-500 text-white bg-[#111]'
+                          ? 'border-blue-500 text-white bg-[#111]'
                           : 'border-transparent text-white/45 hover:text-white/80 hover:bg-white/4'
                       }
                     `}
@@ -100,7 +100,7 @@ export function Navbar({ hideLinks = false }: Props) {
           <div className='flex items-center gap-2 shrink-0'>
             <Link
               href='/docs'
-              className='text-[11px] font-mono text-white/45 hover:text-amber-400 transition-colors px-2 py-1 rounded'
+              className='text-[11px] font-mono text-white/45 hover:text-blue-400 transition-colors px-2 py-1 rounded'
             >
               docs
             </Link>
@@ -120,7 +120,7 @@ export function Navbar({ hideLinks = false }: Props) {
               <Github className='w-3.5 h-3.5' />
               <span>GitHub</span>
               {githubStars !== null && (
-                <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] font-mono'>
+                <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 text-[10px] font-mono'>
                   <Star className='w-2.5 h-2.5 fill-current' />
                   {githubStars > 0 ? githubStars.toLocaleString() : '0'}
                 </span>
@@ -162,13 +162,13 @@ export function Navbar({ hideLinks = false }: Props) {
             <div className='hidden md:flex items-center gap-2 ml-auto'>
               <Link
                 href='/'
-                className='text-[11px] font-mono text-white/45 hover:text-amber-400 transition-colors px-2 py-1 rounded'
+                className='text-[11px] font-mono text-white/45 hover:text-blue-400 transition-colors px-2 py-1 rounded'
               >
                 Home
               </Link>
               <Link
                 href='/docs'
-                className='text-[11px] font-mono text-amber-400 px-2 py-1 rounded'
+                className='text-[11px] font-mono text-blue-400 px-2 py-1 rounded'
               >
                 docs
               </Link>
@@ -188,7 +188,7 @@ export function Navbar({ hideLinks = false }: Props) {
                 <Github className='w-3.5 h-3.5' />
                 <span>GitHub</span>
                 {githubStars !== null && (
-                  <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] font-mono'>
+                  <span className='inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 text-[10px] font-mono'>
                     <Star className='w-2.5 h-2.5 fill-current' />
                     {githubStars > 0 ? githubStars.toLocaleString() : '0'}
                   </span>
@@ -248,10 +248,10 @@ export function Navbar({ hideLinks = false }: Props) {
                             key={tab.id}
                             href={tab.href}
                             onClick={() => setMobileMenuOpen(false)}
-                            className='flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-[#111] hover:border-amber-500/30 hover:bg-white/3 active:scale-[0.98] transition-all'
+                            className='flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-[#111] hover:border-blue-500/30 hover:bg-white/3 active:scale-[0.98] transition-all'
                           >
                             <div className='shrink-0 w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center'>
-                              <Icon className='w-5 h-5 text-amber-400/90' />
+                              <Icon className='w-5 h-5 text-blue-400/90' />
                             </div>
                             <div className='min-w-0 flex-1'>
                               <span className='block font-mono text-sm font-medium text-white'>
@@ -269,7 +269,7 @@ export function Navbar({ hideLinks = false }: Props) {
                     <Link
                       href='#faq'
                       onClick={() => setMobileMenuOpen(false)}
-                      className='flex items-center justify-between w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111] hover:border-amber-500/30 font-mono text-sm text-white/90'
+                      className='flex items-center justify-between w-full px-4 py-3 rounded-xl border border-white/10 bg-[#111] hover:border-blue-500/30 font-mono text-sm text-white/90'
                     >
                       FAQ
                       <ChevronRight className='w-4 h-4 text-white/30' />
@@ -284,7 +284,7 @@ export function Navbar({ hideLinks = false }: Props) {
                     <Link
                       href='/docs'
                       onClick={() => setMobileMenuOpen(false)}
-                      className='inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-sm font-medium'
+                      className='inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono text-sm font-medium'
                     >
                       Docs
                     </Link>
@@ -305,7 +305,7 @@ export function Navbar({ hideLinks = false }: Props) {
                       <Github className='w-4 h-4' />
                       GitHub
                       {githubStars !== null && githubStars > 0 && (
-                        <span className='inline-flex items-center gap-1 text-amber-400 text-xs font-mono'>
+                        <span className='inline-flex items-center gap-1 text-blue-400 text-xs font-mono'>
                           <Star className='w-3 h-3 fill-current' />
                           {githubStars.toLocaleString()}
                         </span>

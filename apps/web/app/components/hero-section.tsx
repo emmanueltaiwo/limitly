@@ -34,8 +34,8 @@ export function HeroSection() {
           transition={{ duration: 0.4 }}
           className='mb-8'
         >
-          <span className='inline-flex items-center gap-2 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400/90 text-xs font-mono'>
-            <span className='w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse' />
+          <span className='inline-flex items-center gap-2 px-2.5 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400/90 text-xs font-mono'>
+            <span className='w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse' />
             Paused on breakpoint
           </span>
         </motion.div>
@@ -51,7 +51,7 @@ export function HeroSection() {
             <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-2 font-mono'>
               Rate limiting,
               <br />
-              <span className='text-amber-400/90'>inspected.</span>
+              <span className='text-blue-400/90'>inspected.</span>
             </h1>
             <p className='text-white/55 text-sm sm:text-base font-mono mb-6 max-w-xl'>
               TypeScript-first SDK. Redis-backed. Zero config. Free forever.
@@ -66,7 +66,7 @@ export function HeroSection() {
             <div className='flex flex-wrap gap-3 mt-6'>
               <Button
                 href='/docs'
-                className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-amber-500 text-black hover:bg-amber-400 font-semibold text-sm font-mono transition-colors'
+                className='inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-blue-500 text-black hover:bg-blue-400 font-semibold text-sm font-mono transition-colors'
               >
                 Get Started
                 <ChevronRight className='w-4 h-4' />

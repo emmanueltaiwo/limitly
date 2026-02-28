@@ -69,7 +69,7 @@ export function FeaturesSection() {
 
         <div className='rounded-lg border border-white/10 bg-[#111] overflow-hidden'>
           <div className='px-3 py-2 border-b border-white/10 bg-[#0d0d0d] flex items-center gap-2'>
-            <CircleDot className='w-3.5 h-3.5 text-amber-500/80' />
+            <CircleDot className='w-3.5 h-3.5 text-blue-500/80' />
             <span className='text-xs text-white/40 font-mono'>
               BREAKPOINTS / FEATURES
             </span>
@@ -87,8 +87,8 @@ export function FeaturesSection() {
                   className='p-4 sm:p-5 hover:bg-white/2 transition-colors group'
                 >
                   <div className='flex items-start gap-3'>
-                    <div className='shrink-0 w-8 h-8 rounded flex items-center justify-center bg-white/5 border border-white/10 group-hover:border-amber-500/30 transition-colors'>
-                      <Icon className='w-4 h-4 text-white/70 group-hover:text-amber-400/90' />
+                    <div className='shrink-0 w-8 h-8 rounded flex items-center justify-center bg-white/5 border border-white/10 group-hover:border-blue-500/30 transition-colors'>
+                      <Icon className='w-4 h-4 text-white/70 group-hover:text-blue-400/90' />
                     </div>
                     <div className='min-w-0'>
                       <div className='font-mono text-sm font-medium text-white/95'>

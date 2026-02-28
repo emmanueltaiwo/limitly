@@ -118,7 +118,7 @@ function highlightLine(
     // Booleans / null
     if (['true', 'false', 'null', 'undefined'].includes(segment)) {
       return (
-        <span key={i} className='text-amber-200'>
+        <span key={i} className='text-blue-200'>
           {segment}
         </span>
       );
@@ -127,7 +127,7 @@ function highlightLine(
     // Numbers
     if (/^[0-9]+$/.test(segment)) {
       return (
-        <span key={i} className='text-amber-300'>
+        <span key={i} className='text-blue-300'>
           {segment}
         </span>
       );
@@ -199,12 +199,12 @@ export function EditorBlock({
                   key={i}
                   initial={
                     isCurrent
-                      ? { backgroundColor: 'rgba(245,158,11,0.12)' }
+                      ? { backgroundColor: 'rgba(59,130,246,0.12)' }
                       : {}
                   }
                   animate={
                     isCurrent
-                      ? { backgroundColor: 'rgba(245,158,11,0.06)' }
+                      ? { backgroundColor: 'rgba(59,130,246,0.06)' }
                       : {}
                   }
                   transition={{
@@ -213,7 +213,7 @@ export function EditorBlock({
                     repeatType: 'reverse',
                   }}
                   className={
-                    isCurrent ? 'pl-3 -ml-3 border-l-2 border-amber-500' : ''
+                    isCurrent ? 'pl-3 -ml-3 border-l-2 border-blue-500' : ''
                   }
                 >
                   <code>{highlightLine(line, language)}</code>

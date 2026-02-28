@@ -283,7 +283,7 @@ aside[data-sidebar]::-webkit-scrollbar-thumb:hover,
 /* Better code styling */
 [data-content] code {
   background: var(--fd-code-background);
-  color: #a78bfa;
+  color: #60a5fa;
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
   font-size: 0.875em;
